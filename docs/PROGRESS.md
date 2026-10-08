@@ -15,7 +15,7 @@ Status keys: ⬜ todo · 🟨 in progress · ✅ done · ⛔ blocked · ✂️ c
 | | |
 |---|---|
 | Phase | Day 0 done except T0.1 accounts; Day 1 core library done |
-| Next action | T0.1 accounts (in progress), then T1.6 onward |
+| Next action | Choose email provider; add Vercel env vars; then T1.6 Horizon client, T1.9 auth |
 | Blockers | none |
 | Last updated | 2026-10-08 |
 
@@ -25,7 +25,7 @@ Status keys: ⬜ todo · 🟨 in progress · ✅ done · ⛔ blocked · ✂️ c
 
 | ID | Task | Acceptance | Status |
 |---|---|---|---|
-| T0.1 | Create accounts: GitHub repo `riktha` (public, MIT), Vercel project, Neon DB via Vercel Marketplace, Telegram bot via @BotFather (pick username), Gmail app password (or other SMTP), cron-job.org account | All credentials in a local `.env.local` (never committed) | ⬜ |
+| T0.1 | Create accounts: GitHub repo `riktha` (public, MIT), Vercel project, Neon DB via Vercel Marketplace, Telegram bot via @BotFather (pick username), Gmail app password (or other SMTP), cron-job.org account | All credentials in a local `.env.local` (never committed) | 🟨 GitHub (private), Vercel (linked), Neon, @RikthaBot, cron-job.org signup, secrets in `.env.local` ✅ · email provider + Vercel env vars pending |
 | T0.2 | Run spike (A Appendix A) on testnet | Every SP1–SP7 row below filled in | ✅ all 7 passed |
 | T0.3 | Decide variant + SEQ_JUMP from spike | Decision log updated; A§2.2 updated | ✅ |
 | T0.4 | Scaffold: Next.js + TS + Tailwind + pnpm, add `@stellar/stellar-sdk`, `@stellar/freighter-api`, `drizzle-orm`, `@neondatabase/serverless`, `drizzle-kit`, `zod`, `jose`, `nodemailer`, `vitest`, `tsx`; copy docs into `docs/` | `pnpm dev` runs; first commit pushed; Vercel deploys the blank app | 🟨 scaffolded, builds, tests pass; push + Vercel wait for T0.1 |
@@ -60,7 +60,7 @@ Run 2026-10-08 with `pnpm spike` → `scripts/spike-results.json`. Hashes are on
 | T1.5 | `lib/core/eligibility.ts`, `errors.ts`, `explain.ts` | Ineligible accounts get clear messages; codes in A§2.6 mapped | ✅ |
 | T1.6 | `lib/stellar/horizon.ts` (raw account, base reserve from latest ledger, submit with error extraction) | Works against testnet | ⬜ |
 | T1.7 | `lib/wallet/freighter.ts` (connect, address, network check, sign) | Connect button shows address; wrong-network warning | 🟨 `lib/wallet/freighter.ts` done; connect button comes with the UI |
-| T1.8 | DB schema (A§6) + `drizzle-kit push` to Neon | Tables exist | ⬜ |
+| T1.8 | DB schema (A§6) + `drizzle-kit push` to Neon | Tables exist | ✅ 5 tables + indexes live (`pnpm db:push`) |
 | T1.9 | Auth: `/api/auth/challenge`, `/verify`, `/logout`, session helper | Sign-in with Freighter works end to end | ⬜ |
 | T1.10 | `POST /api/plans` + `/confirm` | Draft created; confirm verifies signers on chain → ARMED | ⬜ |
 | T1.11 | `/plan/new` wizard: heir, presets incl. Demo, heir email, review panel (decoded txs), sign setup, confirm | A real testnet plan is armed from the UI | ⬜ |
@@ -191,4 +191,4 @@ Setup, packet, dashboard countdown, check-in, cancel, heir claim, `/claim` packe
 - Spike SP1–SP5 passed on testnet. Plain variant chosen; no reserve guard needed.
 - `lib/core` complete (config, builders, state, packet, eligibility, errors, explain): 53 unit tests pass; tsc, lint and build are clean.
 - `/dev/sign-test`: SP6 + SP7 passed in Sam's Freighter. **All spike checks green.**
-- First commit; private GitHub repo created.
+- First commit; private GitHub repo created; Vercel linked; Neon schema pushed; @RikthaBot verified; secrets generated (`pnpm gen-secrets`).
