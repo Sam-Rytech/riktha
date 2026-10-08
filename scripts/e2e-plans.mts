@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- loose JSON in a test harness */
 // End-to-end check of the plan API on testnet against a running app.
 // Run: pnpm tsx scripts/e2e-plans.mts [baseUrl]
 import { Horizon, Keypair, Networks, Transaction, TransactionBuilder } from "@stellar/stellar-sdk";
-import { parsePacket, verifyPacket } from "../lib/core/packet.ts";
+import { parsePacket, verifyPacket } from "../lib/core/packet";
 
 const base = process.argv[2] ?? "http://localhost:3000";
 const horizon = new Horizon.Server("https://horizon-testnet.stellar.org");

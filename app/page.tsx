@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 // Placeholder landing; the full page (problem, how it works, limits) is T4.3.
 export default function Home() {
   return (
@@ -10,6 +12,11 @@ export default function Home() {
         Sign once. If you ever stop using your account, the Stellar network itself hands it to your heir,
         after a warning period you can cancel with one click. No custodian, no shared seed phrase.
       </p>
+      <div>
+        <Link href="/plan/new" className="inline-block rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-paper hover:bg-accent-strong">
+          Create your plan
+        </Link>
+      </div>
     </main>
   );
 }

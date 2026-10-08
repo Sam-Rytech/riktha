@@ -20,7 +20,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <header className="border-b border-line">
           <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
             <Link href="/" className="font-serif text-xl font-semibold tracking-tight">Riktha</Link>
-            <ConnectButton />
+            <nav className="flex items-center gap-5">
+              <Link href="/plan/new" className="text-sm underline-offset-4 hover:underline">Create plan</Link>
+              <ConnectButton />
+            </nav>
           </div>
         </header>
         <div className="flex flex-1 flex-col">{children}</div>

@@ -15,7 +15,7 @@ Status keys: ⬜ todo · 🟨 in progress · ✅ done · ⛔ blocked · ✂️ c
 | | |
 |---|---|
 | Phase | Day 0 done except T0.1 accounts; Day 1 core library done |
-| Next action | Sam: try "Sign in with Freighter" locally; choose email provider. Me: T1.10 plan API → T1.11 wizard → T1.12 packet |
+| Next action | Sam: arm a Demo plan at /plan/new with Freighter + set up a Gmail app password. Me: Day 2 (dashboard, check-in, cancel, heir claim) |
 | Blockers | none |
 | Last updated | 2026-10-08 |
 
@@ -62,9 +62,9 @@ Run 2026-10-08 with `pnpm spike` → `scripts/spike-results.json`. Hashes are on
 | T1.7 | `lib/wallet/freighter.ts` (connect, address, network check, sign) | Connect button shows address; wrong-network warning | ✅ wrapper + `ConnectButton` in the header |
 | T1.8 | DB schema (A§6) + `drizzle-kit push` to Neon | Tables exist | ✅ 5 tables + indexes live (`pnpm db:push`) |
 | T1.9 | Auth: `/api/auth/challenge`, `/verify`, `/logout`, session helper | Sign-in with Freighter works end to end | ✅ challenge/verify/logout/me; `pnpm test:auth` 10/10 against the dev server; real Freighter sign-in to confirm by Sam |
-| T1.10 | `POST /api/plans` + `/confirm` | Draft created; confirm verifies signers on chain → ARMED | ⬜ |
-| T1.11 | `/plan/new` wizard: heir, presets incl. Demo, heir email, review panel (decoded txs), sign setup, confirm | A real testnet plan is armed from the UI | ⬜ |
-| T1.12 | Packet download (`/api/plans/:id/packet`) | Downloaded file passes `verifyPacket` | ⬜ |
+| T1.10 | `POST /api/plans` + `/confirm` | Draft created; confirm verifies signers on chain → ARMED | ✅ `pnpm test:plans`: 19/19 on testnet (real plan armed via the API) |
+| T1.11 | `/plan/new` wizard: heir, presets incl. Demo, heir email, review panel (decoded txs), sign setup, confirm | A real testnet plan is armed from the UI | 🟨 wizard built and walked through to Review in the browser; Sam to sign & arm with Freighter |
+| T1.12 | Packet download (`/api/plans/:id/packet`) | Downloaded file passes `verifyPacket` | ✅ API + download button; the downloaded packet passes `verifyPacket` (in test:plans) |
 
 **End-of-day check:** create a Demo plan on testnet from the UI, download the packet, commit.
 
@@ -163,6 +163,7 @@ Setup, packet, dashboard countdown, check-in, cancel, heir claim, `/claim` packe
 | 10-08 | REVOKED rule: neither hash present and S ≠ s1 (was: S < s1) | So a revoke after a cancelled claim shows as REVOKED |
 | 10-08 | `buildEstateTransfer` can prepend a `ChangeTrust` for the heir | Non-XLM payments otherwise fail with `op_no_trust` |
 | 10-08 | vitest 3.2.4 (not 5.x) | The vitest 5 rolldown native binary fails to load on Sam's Windows machine |
+| 10-08 | Email via Gmail app password (Nodemailer SMTP) for now | No domain yet; Resend + own domain later if deliverability suffers |
 | 10-08 | SDK 17: always use `txHashHex()` / `memoText()` | `tx.hash()` and the memo value are `Uint8Array`, so `.toString("hex")` silently gives `"1,2,3…"` |
 
 ---
@@ -193,3 +194,5 @@ Setup, packet, dashboard countdown, check-in, cancel, heir claim, `/claim` packe
 - `/dev/sign-test`: SP6 + SP7 passed in Sam's Freighter. **All spike checks green.**
 - First commit; private GitHub repo created; Vercel linked; Neon schema pushed; @RikthaBot verified; secrets generated (`pnpm gen-secrets`) and copied to Vercel (`pnpm push-env`).
 - Horizon client + SEP-10 sign-in (JWT cookie) + header ConnectButton; base design tokens per A§14.
+- Plan API + `/plan/new` wizard + packet download. Email: Gmail app password for now (Resend + own domain later if spam is a problem).
+- Found: **Avast HTTPS scanning** re-signs TLS. Node needs `NODE_EXTRA_CA_CERTS=…\Avast\wscert.pem` (set in Sam's user env). The Claude preview server didn't inherit it, so local servers run from a shell.
