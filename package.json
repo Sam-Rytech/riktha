@@ -13,7 +13,8 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "gen-secrets": "node scripts/gen-secrets.mjs",
-    "push-env": "node scripts/push-env.mjs"
+    "push-env": "node scripts/push-env.mjs",
+    "test:auth": "tsx scripts/e2e-auth.mts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.0",

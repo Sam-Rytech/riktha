@@ -1,26 +1,45 @@
 @import "tailwindcss";
 
+/* A§14: calm family ledger. Warm paper, deep ink, one restrained green accent. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --paper: #f7f3ea;
+  --surface: #fffdf8;
+  --ink: #1d1b16;
+  --muted: #5f5a4e;
+  --line: #d9d1bf;
+  --accent: #1f4d3a;
+  --accent-strong: #163829;
+  --danger: #8a1c1c;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --paper: #15140f;
+    --surface: #1d1c16;
+    --ink: #ece6d6;
+    --muted: #a49d8b;
+    --line: #3a372c;
+    --accent: #7fb89a;
+    --accent-strong: #9fcfb4;
+    --danger: #e08a8a;
   }
 }
 
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-heading);
+  --font-mono: var(--font-code);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
 }

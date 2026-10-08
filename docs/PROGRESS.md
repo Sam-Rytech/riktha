@@ -15,7 +15,7 @@ Status keys: ⬜ todo · 🟨 in progress · ✅ done · ⛔ blocked · ✂️ c
 | | |
 |---|---|
 | Phase | Day 0 done except T0.1 accounts; Day 1 core library done |
-| Next action | Choose email provider; add Vercel env vars; then T1.6 Horizon client, T1.9 auth |
+| Next action | Sam: try "Sign in with Freighter" locally; choose email provider. Me: T1.10 plan API → T1.11 wizard → T1.12 packet |
 | Blockers | none |
 | Last updated | 2026-10-08 |
 
@@ -58,10 +58,10 @@ Run 2026-10-08 with `pnpm spike` → `scripts/spike-results.json`. Hashes are on
 | T1.3 | `lib/core/state.ts` derivePlanState | One passing test per branch of A§2.7 | ✅ |
 | T1.4 | `lib/core/packet.ts` make/parse/verify (zod) | Round-trip + tamper tests pass | ✅ |
 | T1.5 | `lib/core/eligibility.ts`, `errors.ts`, `explain.ts` | Ineligible accounts get clear messages; codes in A§2.6 mapped | ✅ |
-| T1.6 | `lib/stellar/horizon.ts` (raw account, base reserve from latest ledger, submit with error extraction) | Works against testnet | ⬜ |
-| T1.7 | `lib/wallet/freighter.ts` (connect, address, network check, sign) | Connect button shows address; wrong-network warning | 🟨 `lib/wallet/freighter.ts` done; connect button comes with the UI |
+| T1.6 | `lib/stellar/horizon.ts` (raw account, base reserve from latest ledger, submit with error extraction) | Works against testnet | ✅ `lib/stellar/horizon.ts` (raw account, base reserve, tx lookup, submit → mapped errors) |
+| T1.7 | `lib/wallet/freighter.ts` (connect, address, network check, sign) | Connect button shows address; wrong-network warning | ✅ wrapper + `ConnectButton` in the header |
 | T1.8 | DB schema (A§6) + `drizzle-kit push` to Neon | Tables exist | ✅ 5 tables + indexes live (`pnpm db:push`) |
-| T1.9 | Auth: `/api/auth/challenge`, `/verify`, `/logout`, session helper | Sign-in with Freighter works end to end | ⬜ |
+| T1.9 | Auth: `/api/auth/challenge`, `/verify`, `/logout`, session helper | Sign-in with Freighter works end to end | ✅ challenge/verify/logout/me; `pnpm test:auth` 10/10 against the dev server; real Freighter sign-in to confirm by Sam |
 | T1.10 | `POST /api/plans` + `/confirm` | Draft created; confirm verifies signers on chain → ARMED | ⬜ |
 | T1.11 | `/plan/new` wizard: heir, presets incl. Demo, heir email, review panel (decoded txs), sign setup, confirm | A real testnet plan is armed from the UI | ⬜ |
 | T1.12 | Packet download (`/api/plans/:id/packet`) | Downloaded file passes `verifyPacket` | ⬜ |
@@ -191,4 +191,5 @@ Setup, packet, dashboard countdown, check-in, cancel, heir claim, `/claim` packe
 - Spike SP1–SP5 passed on testnet. Plain variant chosen; no reserve guard needed.
 - `lib/core` complete (config, builders, state, packet, eligibility, errors, explain): 53 unit tests pass; tsc, lint and build are clean.
 - `/dev/sign-test`: SP6 + SP7 passed in Sam's Freighter. **All spike checks green.**
-- First commit; private GitHub repo created; Vercel linked; Neon schema pushed; @RikthaBot verified; secrets generated (`pnpm gen-secrets`).
+- First commit; private GitHub repo created; Vercel linked; Neon schema pushed; @RikthaBot verified; secrets generated (`pnpm gen-secrets`) and copied to Vercel (`pnpm push-env`).
+- Horizon client + SEP-10 sign-in (JWT cookie) + header ConnectButton; base design tokens per A§14.
