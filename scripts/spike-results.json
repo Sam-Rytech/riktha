@@ -1,0 +1,142 @@
+{
+  "accounts": {
+    "ownerA": "GCVLDFMOVXVXFJHQIQP3AVACU2E6IDWKMYT3PFQC6PT2QNHNMFCSD6IC",
+    "heirA": "GAKJWU7IDP2YNEHVP7BJYMXC6SNGR2CHOSHWUXY4ZS4GVAP373CXFMU3",
+    "keeper": "GAWJXP6LASAEURFV7QFGICNOLJUQEUAI25R6QYSXHAHT5VCE4AYIB57M",
+    "ownerB": "GCBIG2XV67YXSJ5RXIAITNWGRLHPCHW7NNJ6MW2BTBPFSMMPCFTKCLYD",
+    "heirB": "GAOLECITXNWQ77J6OQ4VCIB2YSWJJVIU4PCTZMR7DPLDT6BAON4FLCFL",
+    "ownerC": "GDEMORUA2ESH3KDD4TUDFJP6H67QGTH5C5Y6QXRRCBBZ26XNGJKGIXLM",
+    "heirC": "GAFQQS5J2S2XSUXNPFQP23PK7KC5A63T3KDJETR6SCJAEPL33E62K3ZY"
+  },
+  "SP1_probe": {
+    "acceptedJump": "1000000000",
+    "hash": "f4dd9f2ed982efb36d9ed5287e34ef164918851214512da6c91ab9ec80c22b13"
+  },
+  "SP2_before": {},
+  "sampleUnsignedPhase2Xdr": "AAAAAgAAAACqsZWOretypPBEH7BUAqaJ5A7KZie3lgLz56g07WFFIQAAASwATbSHO5rKAgAAAAIAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAEAAAAPcmlrdGhhOmhhbmRvdmVyAAAAAAMAAAABAAAAABSbU+gb9YaQ9X/CnDLi9Jpo6Ed0j2pfHMy4aoH7/sVyAAAAEAAAAACqsZWOretypPBEH7BUAqaJ5A7KZie3lgLz56g07WFFIQAAAAAAAAAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAABSbU+gb9YaQ9X/CnDLi9Jpo6Ed0j2pfHMy4aoH7/sVyAAAAAQAAAAEAAAAAqrGVjq3rcqTwRB+wVAKmieQOymYnt5YC8+eoNO1hRSEAAAARAAAAAAAAAAA=",
+  "A_setup": {
+    "ok": true,
+    "hash": "27077ec28193fba4626d14ea3d9ac387984ec24299d5548de9d3730facf61c5c"
+  },
+  "B_setup": {
+    "ok": true,
+    "hash": "c42d9f82d212604d08eda4502bf9a8eb2d7e473ae6b6ec0b78d2e7f5bd87bc5f"
+  },
+  "B_phase1_early_inner": {
+    "ok": false,
+    "codes": {
+      "transaction": "tx_bad_minseq_age_or_gap"
+    }
+  },
+  "SP2_after": {
+    "sequence_time": "1791486072",
+    "signers": [
+      "ed25519_public_key",
+      "preauth_tx",
+      "preauth_tx"
+    ]
+  },
+  "SP4_drain": {
+    "ok": true,
+    "hash": "1d90047aa57efc002856e83984f694d211468778991f605852d7af7ac2972c64"
+  },
+  "SP5_phase1_early_feebump": {
+    "ok": false,
+    "codes": {
+      "transaction": "tx_fee_bump_inner_failed",
+      "inner_transaction": "tx_bad_minseq_age_or_gap"
+    }
+  },
+  "A_preauth_after_early": 2,
+  "SP4_setup": {
+    "ok": true,
+    "hash": "70ccab015492a6dc1bf68321feb4ce6a463e7782ea402b649cb555b53d10f643"
+  },
+  "SP4_balance_after_setup": "2.0000000",
+  "SP1_phase1_after_window": {
+    "ok": true,
+    "hash": "337108a49912102667e33e651f339efa75c9082e87e6cbe2ab0afb27ac72957c"
+  },
+  "B_phase1_inner_only": {
+    "ok": true,
+    "hash": "437da3528e86451110b9acbb9a76c16f1167b309b95e8dd799a23864e3efedba"
+  },
+  "B_balance_before_phase2": {
+    "balStroops": "99999999700",
+    "minStroops": "15000000"
+  },
+  "A_seq_after_phase1": {
+    "seq": "21872066120305153",
+    "expected_s1": "21872066120305153",
+    "sequence_time": "1791486147"
+  },
+  "A_phase2_early": {
+    "ok": false,
+    "codes": {
+      "transaction": "tx_fee_bump_inner_failed",
+      "inner_transaction": "tx_bad_minseq_age_or_gap"
+    }
+  },
+  "SP4_phase1": {
+    "ok": true,
+    "hash": "f4cb8f290bb7879430dfd2a66e68e85fac9844408c7c6b5c19cc1be2d459c428"
+  },
+  "SP3_phase2_sponsored": {
+    "ok": true,
+    "hash": "af4b94380c7cd6f3aa5c1fb3ff0ea7a47151acded36d6debaeca85d2633b0fbf"
+  },
+  "B_phase2_plain": {
+    "ok": true,
+    "hash": "9b1de94d8dcb5cb7cf85cd3f5a00d625319d29be95daef9e5558a72e0a9f7014"
+  },
+  "B_final": {
+    "signers": [
+      {
+        "weight": 1,
+        "key": "GAOLECITXNWQ77J6OQ4VCIB2YSWJJVIU4PCTZMR7DPLDT6BAON4FLCFL",
+        "type": "ed25519_public_key"
+      },
+      {
+        "weight": 1,
+        "key": "GCBIG2XV67YXSJ5RXIAITNWGRLHPCHW7NNJ6MW2BTBPFSMMPCFTKCLYD",
+        "type": "ed25519_public_key"
+      }
+    ],
+    "seq": "21872079005207042"
+  },
+  "A_final": {
+    "signers": [
+      {
+        "weight": 1,
+        "key": "GAKJWU7IDP2YNEHVP7BJYMXC6SNGR2CHOSHWUXY4ZS4GVAP373CXFMU3",
+        "type": "ed25519_public_key",
+        "sponsor": "GAKJWU7IDP2YNEHVP7BJYMXC6SNGR2CHOSHWUXY4ZS4GVAP373CXFMU3"
+      },
+      {
+        "weight": 1,
+        "key": "GCVLDFMOVXVXFJHQIQP3AVACU2E6IDWKMYT3PFQC6PT2QNHNMFCSD6IC",
+        "type": "ed25519_public_key"
+      }
+    ],
+    "num_sponsored": 1,
+    "seq": "21872066120305154"
+  },
+  "SP4_phase2_plain_at_min": {
+    "ok": true,
+    "hash": "f0f94e868e189c0c5f8cb82525394bd48a0919ee4843d5d7b6d6d33ab50ae0e7"
+  },
+  "SP4_final": {
+    "signers": [
+      "ed25519_public_key",
+      "ed25519_public_key"
+    ],
+    "balances": [
+      {
+        "balance": "2.0000000",
+        "buying_liabilities": "0.0000000",
+        "selling_liabilities": "0.0000000",
+        "asset_type": "native"
+      }
+    ]
+  }
+}
