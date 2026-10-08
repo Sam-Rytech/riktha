@@ -12,7 +12,8 @@
     "spike": "tsx scripts/spike.ts",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "gen-secrets": "node scripts/gen-secrets.mjs"
+    "gen-secrets": "node scripts/gen-secrets.mjs",
+    "push-env": "node scripts/push-env.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.0",
