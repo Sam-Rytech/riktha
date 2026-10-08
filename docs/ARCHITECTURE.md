@@ -53,7 +53,7 @@ This document is the build spec: if it isn't here, decide it in `PROGRESS.md →
 
 ### 2.2 Spike results (PROGRESS T0.2, run 2026-10-08)
 
-SP1–SP5 confirmed on testnet: see PROGRESS → Spike results for tx hashes. **Outcome: `SEQ_JUMP = 1e9`; the plain variant is the default; no reserve guard is needed.** SP6/SP7 (Freighter) are pending via `/dev/sign-test`.
+SP1–SP5 confirmed on testnet: see PROGRESS → Spike results for tx hashes. **Outcome: `SEQ_JUMP = 1e9`; the plain variant is the default; no reserve guard is needed.** SP6/SP7 (Freighter signs PreconditionsV2 and fee-bumps) also passed.
 
 Original questions:
 

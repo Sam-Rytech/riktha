@@ -15,7 +15,7 @@ Status keys: ⬜ todo · 🟨 in progress · ✅ done · ⛔ blocked · ✂️ c
 | | |
 |---|---|
 | Phase | Day 0 done except T0.1 accounts; Day 1 core library done |
-| Next action | Sam: run `/dev/sign-test` (SP6/SP7) in Chrome with Freighter. Then T0.1 accounts together, then T1.6 onward |
+| Next action | T0.1 accounts (in progress), then T1.6 onward |
 | Blockers | none |
 | Last updated | 2026-10-08 |
 
@@ -26,7 +26,7 @@ Status keys: ⬜ todo · 🟨 in progress · ✅ done · ⛔ blocked · ✂️ c
 | ID | Task | Acceptance | Status |
 |---|---|---|---|
 | T0.1 | Create accounts: GitHub repo `riktha` (public, MIT), Vercel project, Neon DB via Vercel Marketplace, Telegram bot via @BotFather (pick username), Gmail app password (or other SMTP), cron-job.org account | All credentials in a local `.env.local` (never committed) | ⬜ |
-| T0.2 | Run spike (A Appendix A) on testnet | Every SP1–SP7 row below filled in | 🟨 SP1–SP5 ✅; SP6/SP7 need Freighter (`/dev/sign-test`) |
+| T0.2 | Run spike (A Appendix A) on testnet | Every SP1–SP7 row below filled in | ✅ all 7 passed |
 | T0.3 | Decide variant + SEQ_JUMP from spike | Decision log updated; A§2.2 updated | ✅ |
 | T0.4 | Scaffold: Next.js + TS + Tailwind + pnpm, add `@stellar/stellar-sdk`, `@stellar/freighter-api`, `drizzle-orm`, `@neondatabase/serverless`, `drizzle-kit`, `zod`, `jose`, `nodemailer`, `vitest`, `tsx`; copy docs into `docs/` | `pnpm dev` runs; first commit pushed; Vercel deploys the blank app | 🟨 scaffolded, builds, tests pass; push + Vercel wait for T0.1 |
 
@@ -42,8 +42,8 @@ Run 2026-10-08 with `pnpm spike` → `scripts/spike-results.json`. Hashes are on
 | SP4 | Plain Phase 2 at minimum balance works? | ✅ The owner sat at exactly 4 reserves after setup, and Phase 2 still succeeded. Phase 1 removes its own pre-auth signer, which frees one reserve before Phase 2 can run. The owner can't spend that reserve without cancelling the claim. | `f0f94e86…e0e7`; plain `9b1de94d…7014` | **Plain is the default.** No reserve guard and no LOW_RESERVE notification. |
 | SP5 | Error string for early submission | ✅ Fee-bumped: `tx_fee_bump_inner_failed` + inner `tx_bad_minseq_age_or_gap`. Inner-only: `tx_bad_minseq_age_or_gap`. Both pre-auth signers were still present afterwards. | (rejections) | Mapped in `lib/core/errors.ts` |
 | SP5b | Phase 1 submitted **without** a fee-bump (owner pays the fee)? | ✅ Works | `437da352…edba` | Fallback if fee-bump signing fails (SP7) |
-| SP6 | Freighter signs PreconditionsV2 XDR? | ⬜ Run `/dev/sign-test` step 3 | | Moot with the plain variant: the heir signs nothing in Phase 2 |
-| SP7 | Freighter signs a fee-bump envelope? | ⬜ Run `/dev/sign-test` step 4 | | If no: submit Phase 1/2 inner-only (owner pays, SP5b) |
+| SP6 | Freighter signs PreconditionsV2 XDR? | ✅ Signed (1 signature), via `/dev/sign-test` | (not submitted) | The sponsored variant stays viable; plain is still the default |
+| SP7 | Freighter signs a fee-bump envelope? | ✅ Signed and submitted | `271aaeed…6b88` | The heir pays Phase 1/2 fees via fee-bump from the browser; inner-only stays as a fallback |
 
 **Gate:** if SP1 *and* SP2 fail in ways the fallbacks can't fix, stop and switch to the backup idea (Tripwire) tomorrow morning. Otherwise continue.
 
@@ -190,4 +190,5 @@ Setup, packet, dashboard countdown, check-in, cancel, heir claim, `/claim` packe
 - Analysed the docs against CAP-21. Initialised the repo; moved the docs to `docs/`; scaffolded Next 16 + deps.
 - Spike SP1–SP5 passed on testnet. Plain variant chosen; no reserve guard needed.
 - `lib/core` complete (config, builders, state, packet, eligibility, errors, explain): 53 unit tests pass; tsc, lint and build are clean.
-- `/dev/sign-test` page ready for SP6/SP7.
+- `/dev/sign-test`: SP6 + SP7 passed in Sam's Freighter. **All spike checks green.**
+- First commit; private GitHub repo created.
