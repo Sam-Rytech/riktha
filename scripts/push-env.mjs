@@ -9,12 +9,17 @@ const KEYS = [
   "SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "MAIL_FROM",
 ];
 const ENVS = ["production", "preview"];
+// .env.local points at localhost; deployed links in emails/Telegram must use the public URL.
+const PROD_APP_URL = process.env.PROD_APP_URL ?? "https://riktha.vercel.app";
 
 const env = Object.fromEntries(
   readFileSync(".env.local", "utf8").split(/\r?\n/)
     .filter((l) => /^[A-Z0-9_]+=/.test(l))
     .map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"(.*)"$/, "$1")]; }),
 );
+
+env.NEXT_PUBLIC_APP_URL = PROD_APP_URL;
+KEYS.push("NEXT_PUBLIC_APP_URL");
 
 for (const k of KEYS) {
   if (!env[k]) { console.log(`skip ${k} (not in .env.local)`); continue; }
