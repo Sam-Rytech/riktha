@@ -8,7 +8,7 @@ function getTransport(): Transporter | null {
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
   if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) return (transport = null);
   const port = Number(SMTP_PORT ?? 465);
-  return (transport = nodemailer.createTransport({ host: SMTP_HOST, port, secure: port === 465, auth: { user: SMTP_USER, pass: SMTP_PASS } }));
+  return (transport = nodemailer.createTransport({ host: SMTP_HOST, port, secure: port === 465, auth: { user: SMTP_USER, pass: SMTP_PASS.replace(/\s+/g, "") } })); // Google shows app passwords with spaces
 }
 
 export const emailEnabled = () => getTransport() !== null;
