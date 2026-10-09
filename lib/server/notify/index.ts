@@ -30,6 +30,7 @@ export async function dispatch(plan: Plan, due: Due, times: { eligibleAt?: numbe
   const msg = render(due.kind, {
     appUrl: appUrl(), owner: plan.ownerAddress, heir: plan.heirAddress,
     inactivitySeconds: plan.inactivitySecs, graceSeconds: plan.graceSecs, ...times,
+    heirKind: plan.heirKind as "wallet" | "kit", planId: plan.id,
   });
   const urgent = URGENT.has(due.kind);
   let sent = 0;

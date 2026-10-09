@@ -1,5 +1,6 @@
 import { StrKey } from "@stellar/stellar-sdk";
 import { z } from "zod";
+import { claimKitSchema } from "@/lib/core/claimkit";
 import { requireSession } from "@/lib/server/auth";
 import { handle } from "@/lib/server/http";
 import { createDraft, listPlans } from "@/lib/server/plans";
@@ -9,6 +10,7 @@ const body = z.object({
   inactivitySeconds: z.number().int().positive(),
   graceSeconds: z.number().int().positive(),
   heirEmail: z.email().max(254).optional().or(z.literal("")),
+  heirKit: claimKitSchema.optional(),
 });
 
 export const POST = handle(async (req: Request) => {

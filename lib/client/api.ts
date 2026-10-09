@@ -22,7 +22,7 @@ export async function api<T>(path: string, init: RequestInit & { json?: unknown 
 /** Shape returned by GET /api/plans/:id (see lib/server/plans.ts planWithState). */
 export interface PlanView {
   id: string; role: "owner" | "heir"; network: string; owner: string; heir: string; heirEmail?: string | null;
-  variant: "plain" | "sponsored"; inactivitySeconds: number; graceSeconds: number; version: number;
+  variant: "plain" | "sponsored"; heirKind?: "wallet" | "kit"; inactivitySeconds: number; graceSeconds: number; version: number;
   createdAt: string; setupTxHash: string | null; phase1Seq: string; phase1Hash: string; phase2Hash: string;
   phase1Xdr: string; phase2Xdr: string; state: string; seqTime?: number; eligibleAt?: number; claimableAt?: number;
   ownerCanPayFee?: boolean; diagnostics: string[];

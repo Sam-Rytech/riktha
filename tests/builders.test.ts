@@ -1,7 +1,7 @@
 import { Asset, Keypair } from "@stellar/stellar-sdk";
 import { describe, expect, it } from "vitest";
 import {
-  buildCheckIn, buildEstateTransfer, buildPlan, buildRevoke, memoText, parseTx, PlanParams, preauthSignerKey, txHashHex, wrapFeeBump,
+  buildCheckIn, buildEstateTransfer, buildInheritedPayment, buildPlan, buildRevoke, memoText, parseTx, PlanParams, preauthSignerKey, txHashHex, wrapFeeBump,
 } from "@/lib/core/builders";
 import { MEMOS, SEQ_JUMP } from "@/lib/core/config";
 
@@ -128,5 +128,18 @@ describe("other builders", () => {
     const fb = wrapFeeBump("testnet", heir, p.phase2);
     expect(fb.feeSource).toBe(heir);
     expect(txHashHex(fb.innerTransaction)).toBe(p.phase2Hash);
+  });
+
+  it("buildInheritedPayment: owner is the source; memo id vs text; create account", () => {
+    const dest = Keypair.random().publicKey();
+    const pay = buildInheritedPayment("testnet", owner, 41n, dest, Asset.native(), "5", { memo: "123456789" });
+    expect(pay.source).toBe(owner);
+    expect(pay.sequence).toBe("42");
+    expect(pay.memo.type).toBe("id");
+    expect(pay.operations[0]).toMatchObject({ type: "payment", destination: dest, amount: "5.0000000" });
+    expect(pay.operations[0].source).toBeUndefined();
+    expect(memoText(buildInheritedPayment("testnet", owner, 41n, dest, Asset.native(), "5", { memo: "exchange-ref" }))).toBe("exchange-ref");
+    expect(buildInheritedPayment("testnet", owner, 41n, dest, Asset.native(), "2", { createDestination: true }).operations[0].type).toBe("createAccount");
+    expect(() => buildInheritedPayment("testnet", owner, 41n, dest, new Asset("USDC", Keypair.random().publicKey()), "2", { createDestination: true })).toThrow();
   });
 });

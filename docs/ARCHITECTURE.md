@@ -663,3 +663,28 @@ main().catch(e => { console.error(e); process.exit(1); });
 - Networks (testnet, friendbot, resets): https://developers.stellar.org/docs/networks
 - js-stellar-base TransactionBuilder: https://github.com/stellar/js-stellar-base/blob/master/src/transaction_builder.js
 - Vercel cron limits: https://vercel.com/docs/cron-jobs/usage-and-pricing
+
+---
+
+## 15. Heir claim kit (heirs who don't use crypto) — added 2026-10-09
+
+**Goal:** an owner can name an heir by **email only**. The heir needs no wallet, no Stellar account and no XLM, ever. Riktha still never holds a usable key.
+
+**Owner side (all in the owner's browser):**
+1. Generate a fresh heir keypair `H`. Its public key goes into Phase 2 exactly like a wallet heir's address. An `ed25519` signer doesn't require the account to exist.
+2. Generate a **claim code**: 6 words from the BIP-39 English list (66 bits).
+3. Encrypt `H.secret` with the code: PBKDF2-SHA256 (600,000 iterations, random 16-byte salt) → AES-256-GCM (random 12-byte IV). The additional authenticated data is `riktha-kit/v1|<owner>|<H.public>`, which binds the ciphertext to this owner and heir.
+4. The owner sees the code **once** (with a print option) and must confirm they've written it down before signing. The code is never sent to the server.
+
+The **claim kit** `{v, kdf, iterations, salt, iv, ciphertext, heirPublic}` is stored on the plan row (`heir_kind = 'kit'`, `heir_kit`) and included in the packet (`claimKit`). Offline guessing costs 2^66 × 600k PBKDF2 rounds, which is infeasible.
+
+**Heir side (`/inherit/[planId]`, linked from every heir email; `/claim` also accepts a packet with a kit):**
+1. Enter the claim code → the browser decrypts `H` in memory only.
+2. **Start the claim / Complete the handover** are submitted *without a wallet*: the pre-auth signers authorize them, and the owner's account pays the fee (SP5b). After Phase 1 the owner always has at least one freed reserve (SP4), so Phase 2 is always payable.
+3. **After handover, the owner's account is the heir's wallet.** Payments use **source = owner account** (sequence and fees from the owner's balance), signed by `H`, whose weight W ≥ the high threshold. "Send to an address" supports a memo (exchanges require one) and creates the destination with `CreateAccount` if it doesn't exist (XLM only).
+
+**Re-arm** keeps the same heir key and kit. **Changing the heir** in the wizard creates a new kit and code. A superseded plan's link follows `superseded_by` to the latest version.
+
+**Trade-off (stated in the UI):** like a will, whoever holds both the packet/email link *and* the claim code can claim, but only after the inactivity and grace windows, and the owner can cancel during the grace window. The owner rotates the code by changing the heir.
+
+**Next (if time allows): cash-out.** After handover, "Withdraw to my bank" converts to USDC and opens an anchor's SEP-24 withdrawal (testnet: `testanchor.stellar.org`), signed with `H` over the owner account.

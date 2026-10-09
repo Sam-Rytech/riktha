@@ -1,5 +1,6 @@
 import "server-only";
 import nodemailer, { type Transporter } from "nodemailer";
+import { isReservedAddress } from "./reserved";
 
 let transport: Transporter | null | undefined;
 
@@ -19,6 +20,7 @@ export interface Attachment { filename: string; content: string; contentType: st
 export async function sendEmail(to: string, mail: { subject: string; text: string; html: string }, attachments: Attachment[] = []): Promise<boolean> {
   const t = getTransport();
   if (!t) return false;
+  if (isReservedAddress(to)) return true; // pretend success so it isn't retried
   try {
     await t.sendMail({
       from: process.env.MAIL_FROM ?? process.env.SMTP_USER,

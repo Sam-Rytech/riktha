@@ -1,6 +1,7 @@
 import { StrKey } from "@stellar/stellar-sdk";
 import { z } from "zod";
 import { BuiltPlan, memoText, parseTx, txHashHex, Variant } from "./builders";
+import { claimKitSchema, type ClaimKit } from "./claimkit";
 import { MEMOS, NETWORKS, NetworkName, SEQ_JUMP } from "./config";
 
 const gAddress = z.string().refine((s) => StrKey.isValidEd25519PublicKey(s), "invalid Stellar address");
@@ -22,6 +23,8 @@ export const packetSchema = z.object({
   phase2: phase,
   createdAt: z.string(),
   howToClaimWithoutRiktha: z.array(z.string()),
+  /** A§15: present when the heir was named by email; opened with the owner's claim code. */
+  claimKit: claimKitSchema.optional(),
 });
 export type Packet = z.infer<typeof packetSchema>;
 
@@ -34,6 +37,7 @@ export interface PacketInput {
   graceSeconds: number;
   plan: Pick<BuiltPlan, "baseSeq" | "phase1Seq" | "phase2Seq" | "phase1Hash" | "phase2Hash"> & { phase1Xdr: string; phase2Xdr: string };
   createdAt?: Date;
+  claimKit?: ClaimKit | null;
 }
 
 export function makePacket(i: PacketInput): Packet {
@@ -57,6 +61,7 @@ export function makePacket(i: PacketInput): Packet {
       `3. Wait the grace window. ${signStep} in a fee-bump paid by your account, and submit.`,
       "4. You are now a signer on the owner's account and can move its assets.",
     ],
+    ...(i.claimKit ? { claimKit: i.claimKit } : {}),
   };
 }
 
@@ -107,5 +112,6 @@ export function verifyPacket(p: Packet): string[] {
     const set = t2.operations.find((o) => o.type === "setOptions") as { signer?: { ed25519PublicKey?: string; weight?: number } } | undefined;
     if (set?.signer?.ed25519PublicKey !== p.heir || !set.signer.weight) errors.push("phase2: must add the heir as a signer");
   }
+  if (p.claimKit && p.claimKit.heirPublic !== p.heir) errors.push("claim kit belongs to a different heir");
   return errors;
 }

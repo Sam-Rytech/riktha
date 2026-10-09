@@ -156,7 +156,7 @@ function Dashboard({ me }: { me: string }) {
       <Card>
         <h2 className="font-serif text-xl">Plan details</h2>
         <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-          <Detail k="Heir" v={<span className="font-mono" title={plan.heir}>{short(plan.heir)}</span>} />
+          <Detail k="Heir" v={plan.heirKind === "kit" ? <span>Claim kit (no wallet needed)</span> : <span className="font-mono" title={plan.heir}>{short(plan.heir)}</span>} />
           <Detail k="Heir email" v={plan.heirEmail || "—"} />
           <Detail k="Inactivity window" v={formatDuration(plan.inactivitySeconds)} />
           <Detail k="Grace window" v={formatDuration(plan.graceSeconds)} />

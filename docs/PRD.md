@@ -102,6 +102,7 @@ The owner signs **one setup transaction**. It registers two pre-authorized futur
 | H3 | Start the claim | When eligible, "Start claim" submits Phase 1 wrapped in a fee-bump the heir pays. (The keeper normally does this automatically.) |
 | H4 | Complete handover | When claimable, "Complete handover" signs (if required) and submits Phase 2 in a fee-bump. |
 | H5 | Move the estate | After handover: list of the owner account's balances, and "Send to me" per asset, signed by the heir's own key (tx source = heir, op source = owner). |
+| H7 | Inherit without knowing crypto | Owner names heir by email; heir claims at the emailed link with a 6-word code; no wallet or XLM needed; can then send funds to any address with a memo (A§15). |
 | H6 | Claim without Riktha's DB | `/claim`: upload the packet, the state is derived purely from chain, submit Phase 1/2. |
 
 ### System

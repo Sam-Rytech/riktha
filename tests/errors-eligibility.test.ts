@@ -103,3 +103,10 @@ describe("explainTx", () => {
     expect(explainTx(p.setup, names).ops.every((o) => /Pre-approve/.test(o.plain))).toBe(true);
   });
 });
+
+describe("checkHeirAccount for claim-kit heirs", () => {
+  it("doesn't require the fresh key to exist", () => {
+    expect(checkHeirAccount(Keypair.random().publicKey(), owner, null, { mustExist: false })).toEqual([]);
+    expect(checkHeirAccount(owner, owner, null, { mustExist: false })[0]).toMatch(/different/);
+  });
+});

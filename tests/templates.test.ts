@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { NotificationKind } from "@/lib/core/notifications";
+import { isReservedAddress } from "@/lib/server/notify/reserved";
 import { render, toEmail } from "@/lib/server/notify/templates";
 
 const KINDS: NotificationKind[] = [
@@ -19,5 +20,13 @@ describe("email templates (deliverability)", () => {
   });
   it("escapes HTML in content", () => {
     expect(toEmail({ title: "<b>x</b>", body: "a & b" }, false).html).toContain("&lt;b&gt;x&lt;/b&gt;");
+  });
+});
+
+
+describe("reserved test addresses", () => {
+  it("skips RFC 2606 domains but not real ones", () => {
+    for (const a of ["heir@example.com", "x@mail.example.org", "a@foo.test", "b@bar.invalid"]) expect(isReservedAddress(a)).toBe(true);
+    for (const a of ["someone@gmail.com", "me@example.co.uk", "x@testing.com"]) expect(isReservedAddress(a)).toBe(false);
   });
 });

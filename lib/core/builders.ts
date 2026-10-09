@@ -126,6 +126,24 @@ export function buildEstateTransfer(
   return b.setTimeout(SIGN_TIMEOUT_SECONDS).build();
 }
 
+/**
+ * Claim-kit heirs have no account of their own (A§15): after handover they spend straight from the
+ * owner's account (tx source = owner, fee from its balance), signing with the heir key.
+ * `createDestination` sends XLM with CreateAccount when the destination doesn't exist yet.
+ */
+export function buildInheritedPayment(
+  network: NetworkName, owner: string, ownerSeq: bigint, destination: string, asset: Asset, amount: string,
+  opts: { memo?: string; createDestination?: boolean } = {},
+): Transaction {
+  if (opts.createDestination && !asset.isNative()) throw new Error("only XLM can create a new account");
+  const b = builderAt(network, owner, ownerSeq + 1n);
+  b.addOperation(opts.createDestination
+    ? Operation.createAccount({ destination, startingBalance: amount })
+    : Operation.payment({ destination, asset, amount }));
+  if (opts.memo) b.addMemo(/^\d{1,19}$/.test(opts.memo) ? Memo.id(opts.memo) : Memo.text(opts.memo));
+  return b.setTimeout(SIGN_TIMEOUT_SECONDS).build();
+}
+
 /** Unsigned fee-bump; the fee source signs it. */
 export function wrapFeeBump(
   network: NetworkName, feeSource: string, inner: Transaction, baseFee: string = FEE_BUMP_BASE_FEE,

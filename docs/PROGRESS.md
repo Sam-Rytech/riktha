@@ -194,6 +194,8 @@ Setup, packet, dashboard countdown, check-in, cancel, heir claim, `/claim` packe
 - Fixed: keeper time budget started before the DB query (a cold Neon start meant nothing got processed).
 - Accounts wired: Gmail SMTP, NEXT_PUBLIC_APP_URL, Telegram webhook + /status, cron-job.org every minute (test run 200). Live cancel → CANCELLED alert on all 3 channels. Gmail mail lands in spam (no own domain); content tweaked.
 - Manual test passed end to end. Found: the session cookie outlives a Freighter account switch (Sam's plan went on the wrong account). Added a site-wide account-mismatch banner, and the wizard now names the account being protected.
+- **Claim kit shipped:** the wizard offers "my heir doesn't use crypto"; the code is generated and locked in the owner's browser; `/inherit/[id]` (no sign-in, no wallet) → unlock → claim → send anywhere from the inherited account. `pnpm test:kit` 16/16 on testnet. Reserved test domains (example.com, .test, .invalid) are never emailed.
+- drizzle-kit `push` now wrongly proposes re-adding `notifications_dedupe` (and truncating the table): apply schema changes with additive SQL instead.
 - Decided: build the **heir claim kit** (heir named by email; key locked with a claim code in the owner's browser), then testnet anchor **cash-out** if time allows.
 
 ### 2026-10-08

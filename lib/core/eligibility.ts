@@ -51,10 +51,11 @@ export function checkOwnerAccount(
   };
 }
 
-export function checkHeirAccount(heir: string, owner: string, heirAccount: HorizonAccount | null): string[] {
+/** `mustExist: false` for claim-kit heirs, whose fresh key has no account (A§15). */
+export function checkHeirAccount(heir: string, owner: string, heirAccount: HorizonAccount | null, opts: { mustExist?: boolean } = {}): string[] {
   if (!StrKey.isValidEd25519PublicKey(heir)) return ["That isn't a valid Stellar address (it should start with G)."];
   if (heir === owner) return ["The heir must be a different account from yours."];
-  if (!heirAccount) return ["The heir's account must exist and be funded on this network."];
+  if (!heirAccount && opts.mustExist !== false) return ["The heir's account must exist and be funded on this network."];
   return [];
 }
 

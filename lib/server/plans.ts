@@ -2,6 +2,7 @@ import "server-only";
 import { and, desc, eq, gte, isNull, ne, sql } from "drizzle-orm";
 import { buildPlan, buildRevoke, parseTx, preauthSignerKey, txHashHex, Variant } from "@/lib/core/builders";
 import { NetworkName } from "@/lib/core/config";
+import type { ClaimKit } from "@/lib/core/claimkit";
 import { checkHeirAccount, checkOwnerAccount, checkWindows } from "@/lib/core/eligibility";
 import { explainTx } from "@/lib/core/explain";
 import { dueNotifications } from "@/lib/core/notifications";
@@ -45,7 +46,11 @@ async function knownHashes(owner: string, network: NetworkName): Promise<string[
   return rows.flatMap((r) => [r.h1, r.h2]);
 }
 
-export interface DraftInput { heir: string; inactivitySeconds: number; graceSeconds: number; heirEmail?: string | null }
+export interface DraftInput {
+  heir: string; inactivitySeconds: number; graceSeconds: number; heirEmail?: string | null;
+  /** A§15: heir named by email; `heir` is then the kit's public key and needs no account. */
+  heirKit?: ClaimKit | null;
+}
 
 /** Validates everything against the chain, builds the 3 transactions and stores a DRAFT. */
 export async function createDraft(s: Session, input: DraftInput) {
@@ -61,7 +66,12 @@ export async function createDraft(s: Session, input: DraftInput) {
     baseReserveStroops(s.network), knownHashes(s.address, s.network),
   ]);
   const ownerCheck = checkOwnerAccount(owner, reserve, known);
-  const errors = [...checkWindows(s.network, input.inactivitySeconds, input.graceSeconds), ...checkHeirAccount(input.heir, s.address, heir), ...ownerCheck.errors];
+  const kit = input.heirKit ?? null;
+  if (kit && kit.heirPublic !== input.heir) throw new PlanError("The claim kit doesn't match the heir key.", 400);
+  if (kit && !input.heirEmail) throw new PlanError("An heir without a wallet needs an email address, so we can reach them.", 400);
+  // A kit heir's key is brand new: it has no account, and doesn't need one (A§15).
+  const heirErrors = checkHeirAccount(input.heir, s.address, heir, { mustExist: !kit });
+  const errors = [...checkWindows(s.network, input.inactivitySeconds, input.graceSeconds), ...heirErrors, ...ownerCheck.errors];
   if (errors.length) throw new PlanError(errors[0], 400, errors);
 
   const built = buildPlan({
@@ -73,6 +83,7 @@ export async function createDraft(s: Session, input: DraftInput) {
 
   const [row] = await db().insert(plans).values({
     network: s.network, ownerAddress: s.address, heirAddress: input.heir, heirEmail: input.heirEmail || null,
+    heirKind: kit ? "kit" : "wallet", heirKit: kit,
     variant: DEFAULT_VARIANT, weight: ownerCheck.weight,
     inactivitySecs: input.inactivitySeconds, graceSecs: input.graceSeconds,
     baseSeq: built.baseSeq.toString(), phase1Seq: built.phase1Seq.toString(), phase2Seq: built.phase2Seq.toString(),
@@ -81,7 +92,7 @@ export async function createDraft(s: Session, input: DraftInput) {
     version: (previous?.version ?? 0) + 1,
   }).returning();
 
-  const names = { [s.address]: "your account", [input.heir]: "your heir" };
+  const names = { [s.address]: "your account", [input.heir]: kit ? "your heir's claim key" : "your heir" };
   return {
     planId: row.id,
     setupXdr: row.setupXdr, phase1Xdr: row.phase1Xdr, phase2Xdr: row.phase2Xdr,
@@ -123,7 +134,7 @@ export async function planWithState(plan: Plan, role: "owner" | "heir") {
   return {
     id: plan.id, role, network: plan.network, owner: plan.ownerAddress, heir: plan.heirAddress,
     heirEmail: role === "owner" ? plan.heirEmail : undefined,
-    variant: plan.variant, inactivitySeconds: plan.inactivitySecs, graceSeconds: plan.graceSecs,
+    variant: plan.variant, inactivitySeconds: plan.inactivitySecs, graceSeconds: plan.graceSecs, heirKind: plan.heirKind,
     version: plan.version, createdAt: plan.createdAt, setupTxHash: plan.setupTxHash,
     phase1Seq: plan.phase1Seq, phase1Hash: plan.phase1Hash, phase2Hash: plan.phase2Hash,
     // Both phases are already in the packet the heir holds, so exposing them adds nothing secret.
@@ -156,6 +167,8 @@ export async function rearm(s: Session, id: string, overrides: Partial<DraftInpu
     inactivitySeconds: overrides.inactivitySeconds ?? plan.inactivitySecs,
     graceSeconds: overrides.graceSeconds ?? plan.graceSecs,
     heirEmail: overrides.heirEmail !== undefined ? overrides.heirEmail : plan.heirEmail,
+    // Same heir key → the same kit (and claim code) keeps working.
+    heirKit: overrides.heir && overrides.heir !== plan.heirAddress ? null : plan.heirKit,
   });
 }
 

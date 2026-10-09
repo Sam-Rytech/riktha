@@ -3,6 +3,7 @@
 // Packet-only claim (PRD H6): no sign-in, no Riktha API, no database. Everything is derived from the chain.
 import { useCallback, useEffect, useState } from "react";
 import ClaimActions from "@/components/ClaimActions";
+import KitClaim from "@/components/KitClaim";
 import { btn, Card, ErrorBox, short, StateBadge } from "@/components/ui";
 import { NETWORK } from "@/lib/client/actions";
 import { formatDuration } from "@/lib/core/eligibility";
@@ -77,7 +78,9 @@ export default function ClaimPage() {
 
       <ErrorBox message={error?.message} details={error?.details} />
 
-      {packet && (
+      {packet?.claimKit && <KitClaim packet={{ ...packet, claimKit: packet.claimKit }} />}
+
+      {packet && !packet.claimKit && (
         <>
           <Card>
             <div className="flex flex-wrap items-center justify-between gap-3">

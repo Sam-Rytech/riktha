@@ -3,6 +3,7 @@
 import { StrKey } from "@stellar/stellar-sdk";
 import { useEffect, useRef, useState } from "react";
 import TxReview from "@/components/TxReview";
+import { newHeirKit } from "@/lib/core/claimkit";
 import { parseTx } from "@/lib/core/builders";
 import { NetworkName, PRESETS, PresetName } from "@/lib/core/config";
 import { formatDuration } from "@/lib/core/eligibility";
@@ -16,9 +17,11 @@ const presets = (Object.keys(PRESETS) as PresetName[]).filter((k) => NETWORK ===
 
 interface Draft { planId: string; setupXdr: string; explain: { setup: ExplainedTx; phase1: ExplainedTx; phase2: ExplainedTx }; removesStaleSigners: number }
 type Step = "heir" | "timing" | "review" | "done";
-type Busy = null | "building" | "signing" | "submitting" | "confirming";
+type Busy = null | "locking" | "building" | "signing" | "submitting" | "confirming";
+type HeirKind = "wallet" | "kit";
 
 const BUSY_LABEL: Record<Exclude<Busy, null>, string> = {
+  locking: "Creating your heir's claim key and locking it with a code (this takes a moment)…",
   building: "Checking your account and preparing the transactions…",
   signing: "Approve the transaction in Freighter…",
   submitting: "Sending to the Stellar network…",
@@ -32,6 +35,9 @@ export default function NewPlan() {
   const [step, setStep] = useState<Step>("heir");
   const [heir, setHeir] = useState("");
   const [heirEmail, setHeirEmail] = useState("");
+  const [heirKind, setHeirKind] = useState<HeirKind>("kit");
+  const [claimCode, setClaimCode] = useState<string>();
+  const [codeSaved, setCodeSaved] = useState(false);
   const [preset, setPreset] = useState<PresetName>(NETWORK === "testnet" ? "demo" : "d180");
   const [draft, setDraft] = useState<Draft>();
   const [busy, setBusy] = useState<Busy>(null);
@@ -44,15 +50,26 @@ export default function NewPlan() {
 
   const { I, G } = PRESETS[preset];
   const heirValid = StrKey.isValidEd25519PublicKey(heir.trim());
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(heirEmail.trim());
+  const heirStepValid = heirKind === "kit" ? emailValid : heirValid && heir.trim() !== me;
 
   async function buildDraft() {
     setError(undefined);
-    setBusy("building");
     try {
+      let heirFields: Record<string, unknown> = { heir: heir.trim() };
+      if (heirKind === "kit") {
+        // The heir key and claim code are created here, in your browser; only the locked kit is sent.
+        setBusy("locking");
+        const k = await newHeirKit(me!);
+        heirFields = { heir: k.heirPublic, heirKit: k.kit };
+        setClaimCode(k.code);
+        setCodeSaved(false);
+      }
+      setBusy("building");
       const res = await fetch("/api/plans", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ heir: heir.trim(), heirEmail: heirEmail.trim(), inactivitySeconds: I, graceSeconds: G }),
+        body: JSON.stringify({ ...heirFields, heirEmail: heirEmail.trim(), inactivitySeconds: I, graceSeconds: G }),
       });
       const body = await res.json();
       if (!res.ok) throw Object.assign(new Error(body.error ?? "Couldn't prepare the plan"), { details: body.details });
@@ -113,29 +130,52 @@ export default function NewPlan() {
       <Progress step={step} />
 
       {step === "heir" && (
-        <form onSubmit={(e) => { e.preventDefault(); if (heirValid) setStep("timing"); }} className="space-y-6">
+        <form onSubmit={(e) => { e.preventDefault(); if (heirStepValid) setStep("timing"); }} className="space-y-6">
           <h1 ref={headingRef} tabIndex={-1} className="font-serif text-3xl outline-none">Who should inherit this account?</h1>
           <p className="rounded-lg border border-line bg-surface px-3 py-2 text-sm">You&apos;re creating a plan for <b className="font-mono" title={me}>{me.slice(0, 4)}…{me.slice(-4)}</b>, the account you&apos;re signed in with.</p>
-          <p className="text-muted">Your heir needs their own funded Stellar account. Before the handover they have no power over yours, and their address stays off the public ledger.</p>
+          <fieldset className="grid gap-3 sm:grid-cols-2">
+            <legend className="mb-2 text-sm font-medium">Does your heir use crypto?</legend>
+            {([
+              ["kit", "No, they don't use crypto", "Name them by email. They'll claim with a 6-word code you give them. No wallet needed, ever."],
+              ["wallet", "Yes, they have a Stellar wallet", "They'll claim with their own wallet, such as Freighter."],
+            ] as [HeirKind, string, string][]).map(([k, label, desc]) => (
+              <label key={k} className={`cursor-pointer rounded-xl border p-4 ${heirKind === k ? "border-accent bg-surface" : "border-line hover:border-muted"}`}>
+                <input type="radio" name="heirKind" value={k} aria-label={label} checked={heirKind === k} onChange={() => setHeirKind(k)} className="sr-only" />
+                <span className="flex items-center justify-between gap-2">
+                  <span className="font-medium">{label}</span>
+                  <span aria-hidden className={`h-4 w-4 shrink-0 rounded-full border ${heirKind === k ? "border-[5px] border-accent" : "border-line"}`} />
+                </span>
+                <span className="mt-1 block text-sm text-muted">{desc}</span>
+              </label>
+            ))}
+          </fieldset>
+
+          {heirKind === "wallet" && (
+            <label className="block">
+              <span className="text-sm font-medium">Heir&apos;s Stellar address</span>
+              <input
+                value={heir} onChange={(e) => setHeir(e.target.value)} required spellCheck={false} autoComplete="off"
+                placeholder="G…" aria-invalid={heir !== "" && !heirValid}
+                className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2.5 font-mono text-sm focus:border-accent"
+              />
+              <span className="mt-1 block text-sm text-muted">Their account must already exist. Before the handover they have no power over yours, and their address stays off the public ledger.</span>
+              {heir !== "" && !heirValid && <span className="mt-1 block text-sm text-danger">That isn&apos;t a valid address yet. It should start with G and be 56 characters.</span>}
+              {heir.trim() === me && <span className="mt-1 block text-sm text-danger">That&apos;s your own address. Choose someone else.</span>}
+            </label>
+          )}
           <label className="block">
-            <span className="text-sm font-medium">Heir&apos;s Stellar address</span>
-            <input
-              value={heir} onChange={(e) => setHeir(e.target.value)} required spellCheck={false} autoComplete="off"
-              placeholder="G…" aria-invalid={heir !== "" && !heirValid}
-              className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2.5 font-mono text-sm outline-none focus:border-accent"
-            />
-            {heir !== "" && !heirValid && <span className="mt-1 block text-sm text-danger">That isn&apos;t a valid address yet. It should start with G and be 56 characters.</span>}
-            {heir.trim() === me && <span className="mt-1 block text-sm text-danger">That&apos;s your own address. Choose someone else.</span>}
-          </label>
-          <label className="block">
-            <span className="text-sm font-medium">Heir&apos;s email <span className="font-normal text-muted">(optional)</span></span>
+            <span className="text-sm font-medium">Heir&apos;s email {heirKind === "wallet" && <span className="font-normal text-muted">(optional)</span>}</span>
             <input
               type="email" value={heirEmail} onChange={(e) => setHeirEmail(e.target.value)} autoComplete="off" placeholder="name@example.com"
-              className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm outline-none focus:border-accent"
+              required={heirKind === "kit"} className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm focus:border-accent"
             />
-            <span className="mt-1 block text-sm text-muted">We&apos;ll send them the inheritance packet and tell them when to act.</span>
+            <span className="mt-1 block text-sm text-muted">
+              {heirKind === "kit"
+                ? "We'll tell them they've been named, and email them a link when it's time to claim."
+                : "We'll send them the inheritance packet and tell them when to act."}
+            </span>
           </label>
-          <button type="submit" disabled={!heirValid || heir.trim() === me} className={primary}>Continue</button>
+          <button type="submit" disabled={!heirStepValid} className={primary}>Continue</button>
         </form>
       )}
 
@@ -185,12 +225,13 @@ export default function NewPlan() {
           />
           <TxReview
             title="Later: the handover" badge={`${formatDuration(G)} after the notice`}
-            summary="Adds your heir as a signer, so they can move your assets. It only works if you've sent nothing since the notice. One transaction from you cancels it forever."
+            summary={`Adds ${heirKind === "kit" ? "your heir's claim key" : "your heir"} as a signer, so they can move your assets. It only works if you've sent nothing since the notice. One transaction from you cancels it forever.`}
             tx={draft.explain.phase2}
           />
+          {heirKind === "kit" && claimCode && <ClaimCodeCard code={claimCode} saved={codeSaved} onSaved={setCodeSaved} email={heirEmail.trim()} />}
           <div className="flex gap-3">
-            <button onClick={() => { setDraft(undefined); setStep("timing"); }} disabled={busy !== null} className={secondary}>Back</button>
-            <button onClick={signAndArm} disabled={busy !== null} className={primary}>Sign &amp; arm with Freighter</button>
+            <button onClick={() => { setDraft(undefined); setClaimCode(undefined); setStep("timing"); }} disabled={busy !== null} className={secondary}>Back</button>
+            <button onClick={signAndArm} disabled={busy !== null || (heirKind === "kit" && !codeSaved)} className={primary}>Sign &amp; arm with Freighter</button>
           </div>
         </div>
       )}
@@ -214,6 +255,12 @@ export default function NewPlan() {
             <a href={`/api/plans/${draft.planId}/packet`} download className={primary + " mt-4 inline-block"}>Download packet</a>
             {heirEmail && <p className="mt-3 text-sm text-muted">We&apos;ll also email it to {heirEmail}.</p>}
           </div>
+          {heirKind === "kit" && (
+            <div className="rounded-xl border border-line bg-surface p-5">
+              <h2 className="font-serif text-lg">Pass on the claim code privately</h2>
+              <p className="mt-1 text-muted">We never see your code and can&apos;t recover it. Put it with your will, or in a sealed letter for {heirEmail}. If it&apos;s ever exposed, change your heir to get a new code.</p>
+            </div>
+          )}
           <a href="/dashboard" className={secondary + " inline-block"}>Go to your dashboard</a>
         </div>
       )}
@@ -253,5 +300,36 @@ function ErrorBox({ error }: { error?: { message: string; details?: string[] } }
       <p>{error.message}</p>
       {extra.length > 0 && <ul className="mt-2 list-disc pl-5">{extra.map((d) => <li key={d}>{d}</li>)}</ul>}
     </div>
+  );
+}
+
+const esc = (x: string) => x.replace(/[<>&"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" })[c]!);
+
+function ClaimCodeCard({ code, saved, onSaved, email }: { code: string; saved: boolean; onSaved: (v: boolean) => void; email: string }) {
+  const words = code.split(" ");
+  const print = () => {
+    const w = window.open("", "_blank", "width=600,height=500");
+    if (!w) return;
+    w.document.write(`<title>Riktha claim code</title><body style="font-family:Georgia,serif;padding:40px"><h1>Riktha claim code</h1><p>For: ${esc(email)}</p><ol style="font-size:22px;line-height:1.8">${words.map((x) => `<li>${esc(x)}</li>`).join("")}</ol><p>Keep this private. With it, ${esc(email)} can claim my Stellar account at the link Riktha emails them, but only if I stop using my account.</p></body>`);
+    w.document.close();
+    w.print();
+  };
+  return (
+    <section className="rounded-xl border-2 border-accent bg-surface p-5">
+      <h3 className="font-serif text-lg">Your heir&apos;s claim code</h3>
+      <p className="mt-1 text-sm text-muted">Write these six words down in order. Your heir needs them to claim. They&apos;re shown only now, and Riktha never sees them.</p>
+      <ol className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {words.map((w, i) => (
+          <li key={i} className="rounded-lg border border-line bg-paper px-3 py-2 font-mono"><span className="mr-2 text-xs text-muted">{i + 1}</span>{w}</li>
+        ))}
+      </ol>
+      <div className="mt-4 flex flex-wrap items-center gap-4">
+        <button type="button" onClick={print} className={secondary}>Print</button>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={saved} onChange={(e) => onSaved(e.target.checked)} className="h-4 w-4 accent-[var(--accent)]" />
+          I&apos;ve written down the code and will keep it safe
+        </label>
+      </div>
+    </section>
   );
 }

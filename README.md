@@ -38,6 +38,10 @@ grace window passes ──► heir submits Handover, fee-bumped ──► heir i
 - **Private until handover.** Before phase 2 the ledger shows only two opaque hash signers.
 - **The owner keeps control.** Their key is never removed.
 
+### Heirs who don't use crypto (claim kit)
+
+An owner can name an heir **by email only**. The owner's browser creates a fresh key for the heir and locks it with a **6-word claim code** (PBKDF2-SHA256 at 600k iterations, then AES-256-GCM). The owner keeps the code with their will. Riktha stores only the locked kit and never sees the code. When it's time, the heir opens the link from their email, types the code, and claims. The heir needs no wallet and no XLM: the handover is submitted without a wallet, and afterwards the owner's account *is* their wallet, ready to send funds to any address or exchange (with a memo). See [ARCHITECTURE §15](docs/ARCHITECTURE.md).
+
 ### Why Stellar
 
 This design is only possible because Stellar has, at protocol level, transaction preconditions (`minSeqAge`, `minSeqNum`; Protocol 19), pre-authorized transaction signers, fee-bump transactions, and Soroban auth that goes through classic signers. CAP-21 itself lists *time-delayed key recovery* as a goal. Riktha turns that designed-in, unused capability into a product. It doesn't port as-is to most chains.
@@ -107,6 +111,7 @@ pnpm scenarios        # the 10 protocol scenarios on live testnet → docs/evide
 pnpm test:auth        # sign-in e2e against a running app
 pnpm test:plans       # plan API e2e on testnet
 pnpm test:lifecycle   # arm → keeper notice → handover → estate, plus re-arm and revoke
+pnpm test:kit         # heir named by email → claim code → handover with no wallet → heir spends
 ```
 
 ## Deploying

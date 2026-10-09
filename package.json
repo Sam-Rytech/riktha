@@ -18,10 +18,12 @@
     "test:plans": "tsx scripts/e2e-plans.mts",
     "test:lifecycle": "tsx scripts/e2e-lifecycle.mts",
     "scenarios": "tsx scripts/scenarios.ts",
-    "seed-demo": "tsx scripts/seed-demo.ts"
+    "seed-demo": "tsx scripts/seed-demo.ts",
+    "test:kit": "tsx scripts/e2e-kit.mts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.0",
+    "@scure/bip39": "^2.4.0",
     "@stellar/freighter-api": "6.0.1",
     "@stellar/stellar-sdk": "17.2.1",
     "drizzle-orm": "0.45.4",

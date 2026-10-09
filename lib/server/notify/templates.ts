@@ -10,6 +10,9 @@ export interface TemplateCtx {
   /** unix seconds */
   eligibleAt?: number;
   claimableAt?: number;
+  /** Claim-kit heirs have no account: their links go to /inherit/<planId> (A§15). */
+  heirKind?: "wallet" | "kit";
+  planId?: string;
 }
 export interface Message { title: string; body: string; cta?: { label: string; url: string } }
 
@@ -19,12 +22,16 @@ export const fmtDate = (unix?: number) =>
 
 export function render(kind: NotificationKind, c: TemplateCtx): Message {
   const dash = { label: "Open your dashboard", url: `${c.appUrl}/dashboard` };
-  const heirPage = { label: "Open your heir page", url: `${c.appUrl}/heir` };
+  const kit = c.heirKind === "kit";
+  const heirPage = kit && c.planId
+    ? { label: "Open your inheritance page", url: `${c.appUrl}/inherit/${c.planId}` }
+    : { label: "Open your heir page", url: `${c.appUrl}/heir` };
   const I = formatDuration(c.inactivitySeconds), G = formatDuration(c.graceSeconds);
   switch (kind) {
     case "ARMED_OWNER":
       return { title: "Your Riktha plan is armed", body: `If your account ${short(c.owner)} sends nothing for ${I}, a claim can start. Using your account normally resets the clock. Your heir is ${short(c.heir)}.`, cta: dash };
     case "ARMED_HEIR":
+      if (kit) return { title: "You've been named as someone's heir", body: `The owner of Stellar account ${short(c.owner)} has named you to inherit it, using Riktha. You don't need a crypto wallet and there's nothing to do now. Keep this email. If the owner ever stops using their account for ${I}, we'll email you, and you'll claim it on the page below with the 6-word claim code the owner gave you (for example in their will).`, cta: heirPage };
       return { title: "You've been named as an heir on Riktha", body: `The owner of Stellar account ${short(c.owner)} named your account ${short(c.heir)} as their heir. You can do nothing yet. If the owner stops using their account for ${I}, we'll tell you when you can act. Keep the attached inheritance packet somewhere safe: it lets you claim even without Riktha.`, cta: heirPage };
     case "REMIND_50":
     case "REMIND_80":
@@ -40,6 +47,7 @@ export function render(kind: NotificationKind, c: TemplateCtx): Message {
     case "GRACE_90":
       return { title: "Your heir can take over soon unless you respond", body: `A claim on your account ${short(c.owner)} is in progress. Unless you send any transaction before ${fmtDate(c.claimableAt)}, your heir ${short(c.heir)} will be able to control your account.`, cta: dash };
     case "CLAIMABLE_HEIR":
+      if (kit) return { title: "You can claim the inheritance now", body: `The owner of ${short(c.owner)} didn't respond during the ${G} grace period. Open your inheritance page and enter the 6-word claim code the owner gave you. It takes a minute and needs no crypto wallet.`, cta: heirPage };
       return { title: "You can complete the handover now", body: `The owner of ${short(c.owner)} didn't respond during the ${G} grace period. You can now add your key to their account and move the assets.`, cta: heirPage };
     case "INHERITED_OWNER":
       return { title: "Your account was handed over", body: `Your heir ${short(c.heir)} is now a signer on ${short(c.owner)}. Your own key still works.`, cta: dash };

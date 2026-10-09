@@ -1,7 +1,7 @@
 // A§6. The chain is the source of truth; these tables cache derived state and hold contacts.
 import { sql } from "drizzle-orm";
 import {
-  bigint, boolean, check, index, integer, numeric, pgTable, text, timestamp, unique, uuid,
+  bigint, boolean, check, index, integer, jsonb, numeric, pgTable, text, timestamp, unique, uuid,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
@@ -11,6 +11,9 @@ export const plans = pgTable("plans", {
   ownerAddress: text("owner_address").notNull(),
   heirAddress: text("heir_address").notNull(),
   heirEmail: text("heir_email"),
+  /** 'wallet' = heir brought a Stellar address; 'kit' = named by email with an encrypted claim kit (A§15). */
+  heirKind: text("heir_kind").notNull().default("wallet"),
+  heirKit: jsonb("heir_kit").$type<import("@/lib/core/claimkit").ClaimKit>(),
   variant: text("variant").notNull(),
   weight: integer("weight").notNull(),
   inactivitySecs: bigint("inactivity_secs", { mode: "number" }).notNull(),
@@ -34,6 +37,7 @@ export const plans = pgTable("plans", {
 }, (t) => [
   check("plans_network_check", sql`${t.network} in ('testnet','mainnet')`),
   check("plans_variant_check", sql`${t.variant} in ('sponsored','plain')`),
+  check("plans_heir_kind_check", sql`${t.heirKind} in ('wallet','kit')`),
   index("plans_owner_idx").on(t.ownerAddress),
   index("plans_heir_idx").on(t.heirAddress),
   index("plans_active_status_idx").on(t.status).where(sql`${t.supersededBy} is null`),
