@@ -3,6 +3,7 @@
 import { StrKey } from "@stellar/stellar-sdk";
 import { useEffect, useRef, useState } from "react";
 import TxReview from "@/components/TxReview";
+import { AppMain, btn, ErrorBox as UiErrorBox, inputCls } from "@/components/ui";
 import { newHeirKit } from "@/lib/core/claimkit";
 import { parseTx } from "@/lib/core/builders";
 import { NetworkName, PRESETS, PresetName } from "@/lib/core/config";
@@ -115,7 +116,7 @@ export default function NewPlan() {
   if (me === null) {
     return (
       <Shell>
-        <h1 className="font-serif text-3xl">Create your inheritance plan</h1>
+        <h1 className="headline text-[30px] sm:text-[40px]">Create your inheritance plan</h1>
         <p className="mt-3 text-muted">Sign in with Freighter first, using the account you want to pass on.</p>
         <button onClick={() => signIn().then(setMe).catch((e) => setError({ message: e.message }))} className={primary + " mt-6"}>
           Sign in with Freighter
@@ -126,50 +127,49 @@ export default function NewPlan() {
   }
 
   return (
-    <Shell>
-      <Progress step={step} />
+    <Shell step={step}>
 
       {step === "heir" && (
         <form onSubmit={(e) => { e.preventDefault(); if (heirStepValid) setStep("timing"); }} className="space-y-6">
-          <h1 ref={headingRef} tabIndex={-1} className="font-serif text-3xl outline-none">Who should inherit this account?</h1>
-          <p className="rounded-lg border border-line bg-surface px-3 py-2 text-sm">You&apos;re creating a plan for <b className="font-mono" title={me}>{me.slice(0, 4)}…{me.slice(-4)}</b>, the account you&apos;re signed in with.</p>
+          <h1 ref={headingRef} tabIndex={-1} className="headline text-[30px] outline-none sm:text-[40px]">Who should inherit this account?</h1>
+          <p className="rounded-2xl bg-stone px-4 py-3 text-[14px]">You&apos;re creating a plan for <b className="font-mono" title={me}>{me.slice(0, 4)}…{me.slice(-4)}</b>, the account you&apos;re signed in with.</p>
           <fieldset className="grid gap-3 sm:grid-cols-2">
-            <legend className="mb-2 text-sm font-medium">Does your heir use crypto?</legend>
+            <legend className="mb-3 text-[14px] font-medium">Does your heir use crypto?</legend>
             {([
               ["kit", "No, they don't use crypto", "Name them by email. They'll claim with a 6-word code you give them. No wallet needed, ever."],
               ["wallet", "Yes, they have a Stellar wallet", "They'll claim with their own wallet, such as Freighter."],
             ] as [HeirKind, string, string][]).map(([k, label, desc]) => (
-              <label key={k} className={`cursor-pointer rounded-xl border p-4 ${heirKind === k ? "border-accent bg-surface" : "border-line hover:border-muted"}`}>
+              <label key={k} className={`cursor-pointer rounded-[var(--radius-card)] border-2 p-5 transition-colors ${heirKind === k ? "border-green bg-green-tint" : "border-line hover:border-ink/30"}`}>
                 <input type="radio" name="heirKind" value={k} aria-label={label} checked={heirKind === k} onChange={() => setHeirKind(k)} className="sr-only" />
                 <span className="flex items-center justify-between gap-2">
                   <span className="font-medium">{label}</span>
-                  <span aria-hidden className={`h-4 w-4 shrink-0 rounded-full border ${heirKind === k ? "border-[5px] border-accent" : "border-line"}`} />
+                  <span aria-hidden className={`h-4 w-4 shrink-0 rounded-full border ${heirKind === k ? "border-[6px] border-green" : "border-line"}`} />
                 </span>
-                <span className="mt-1 block text-sm text-muted">{desc}</span>
+                <span className="mt-1 block text-[14px] text-muted">{desc}</span>
               </label>
             ))}
           </fieldset>
 
           {heirKind === "wallet" && (
             <label className="block">
-              <span className="text-sm font-medium">Heir&apos;s Stellar address</span>
+              <span className="text-[14px] font-medium">Heir&apos;s Stellar address</span>
               <input
                 value={heir} onChange={(e) => setHeir(e.target.value)} required spellCheck={false} autoComplete="off"
                 placeholder="G…" aria-invalid={heir !== "" && !heirValid}
-                className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2.5 font-mono text-sm focus:border-accent"
+                className={inputCls + " mt-1.5 font-mono"}
               />
-              <span className="mt-1 block text-sm text-muted">Their account must already exist. Before the handover they have no power over yours, and their address stays off the public ledger.</span>
-              {heir !== "" && !heirValid && <span className="mt-1 block text-sm text-danger">That isn&apos;t a valid address yet. It should start with G and be 56 characters.</span>}
-              {heir.trim() === me && <span className="mt-1 block text-sm text-danger">That&apos;s your own address. Choose someone else.</span>}
+              <span className="mt-1 block text-[14px] text-muted">Their account must already exist. Before the handover they have no power over yours, and their address stays off the public ledger.</span>
+              {heir !== "" && !heirValid && <span className="mt-1 block text-[14px] text-oxblood">That isn&apos;t a valid address yet. It should start with G and be 56 characters.</span>}
+              {heir.trim() === me && <span className="mt-1 block text-[14px] text-oxblood">That&apos;s your own address. Choose someone else.</span>}
             </label>
           )}
           <label className="block">
-            <span className="text-sm font-medium">Heir&apos;s email {heirKind === "wallet" && <span className="font-normal text-muted">(optional)</span>}</span>
+            <span className="text-[14px] font-medium">Heir&apos;s email {heirKind === "wallet" && <span className="font-normal text-muted">(optional)</span>}</span>
             <input
               type="email" value={heirEmail} onChange={(e) => setHeirEmail(e.target.value)} autoComplete="off" placeholder="name@example.com"
-              required={heirKind === "kit"} className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm focus:border-accent"
+              required={heirKind === "kit"} className={inputCls + " mt-1.5"}
             />
-            <span className="mt-1 block text-sm text-muted">
+            <span className="mt-1 block text-[14px] text-muted">
               {heirKind === "kit"
                 ? "We'll tell them they've been named, and email them a link when it's time to claim."
                 : "We'll send them the inheritance packet and tell them when to act."}
@@ -181,23 +181,23 @@ export default function NewPlan() {
 
       {step === "timing" && (
         <div className="space-y-6">
-          <h1 ref={headingRef} tabIndex={-1} className="font-serif text-3xl outline-none">How long should Riktha wait?</h1>
+          <h1 ref={headingRef} tabIndex={-1} className="headline text-[30px] outline-none sm:text-[40px]">How long should Riktha wait?</h1>
           <fieldset className="grid gap-3 sm:grid-cols-2">
             <legend className="sr-only">Inactivity window</legend>
             {presets.map((k) => (
-              <label key={k} className={`cursor-pointer rounded-xl border p-4 transition-colors ${preset === k ? "border-accent bg-surface" : "border-line hover:border-muted"}`}>
+              <label key={k} className={`cursor-pointer rounded-[var(--radius-card)] border-2 p-5 transition-colors ${preset === k ? "border-green bg-green-tint" : "border-line hover:border-ink/30"}`}>
                 <input type="radio" name="preset" value={k} aria-label={PRESETS[k].label} checked={preset === k} onChange={() => setPreset(k)} className="sr-only" />
                 <span className="flex items-center justify-between">
                   <span className="font-medium">{PRESETS[k].label}</span>
-                  <span aria-hidden className={`h-4 w-4 rounded-full border ${preset === k ? "border-[5px] border-accent" : "border-line"}`} />
+                  <span aria-hidden className={`h-4 w-4 rounded-full border ${preset === k ? "border-[6px] border-green" : "border-line"}`} />
                 </span>
-                <span className="mt-1 block text-sm text-muted">
+                <span className="mt-1 block text-[14px] text-muted">
                   {PRESETS[k].testnetOnly ? "For trying it out on testnet." : `Then ${formatDuration(PRESETS[k].G)} to respond.`}
                 </span>
               </label>
             ))}
           </fieldset>
-          <div className="rounded-xl border border-line bg-surface p-5 text-sm leading-relaxed">
+          <div className="rounded-[var(--radius-card)] bg-stone p-5 text-[15px] leading-relaxed">
             <p><b>If you send nothing from this account for {formatDuration(I)}</b>, a claim can start. We alert you by email, Telegram and the dashboard.</p>
             <p className="mt-2"><b>You then have {formatDuration(G)}</b> to send any transaction, which cancels the claim. After that, your heir can add their key to your account.</p>
             <p className="mt-2 text-muted">Sending anything resets the clock: a payment, a trade, or the &ldquo;I&apos;m alive&rdquo; button. Receiving money doesn&apos;t count.</p>
@@ -211,7 +211,7 @@ export default function NewPlan() {
 
       {step === "review" && draft && (
         <div className="space-y-6">
-          <h1 ref={headingRef} tabIndex={-1} className="font-serif text-3xl outline-none">Review and sign</h1>
+          <h1 ref={headingRef} tabIndex={-1} className="headline text-[30px] outline-none sm:text-[40px]">Review and sign</h1>
           <p className="text-muted">You sign <b>one</b> transaction now. It pre-approves two future transactions that the network will only accept if you go quiet.</p>
           <TxReview
             title="Sign now: set up the plan" badge="you sign"
@@ -238,26 +238,26 @@ export default function NewPlan() {
 
       {step === "done" && draft && result && (
         <div className="space-y-6">
-          <h1 ref={headingRef} tabIndex={-1} className="font-serif text-3xl outline-none">Your plan is armed</h1>
-          <div className="rounded-xl border border-accent bg-surface p-5">
-            <p className="font-medium text-accent">✓ Armed on the Stellar network</p>
+          <h1 ref={headingRef} tabIndex={-1} className="headline text-[30px] outline-none sm:text-[40px]">Your plan is armed</h1>
+          <div className="on-night rounded-[var(--radius-card)] bg-night p-6 text-white night-grid">
+            <p className="font-medium text-glow">✓ Armed on the Stellar network</p>
             <p className="mt-2">
               If you send nothing until <b>{result.eligibleAt ? new Date(result.eligibleAt * 1000).toLocaleString() : "the window ends"}</b>, a claim can start.
               Using your account normally pushes this date back.
             </p>
-            <a href={explorerTxUrl(NETWORK, result.txHash)} target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm text-accent underline underline-offset-4">
+            <a href={explorerTxUrl(NETWORK, result.txHash)} target="_blank" rel="noreferrer" className="mt-3 inline-block text-[14px] text-glow underline underline-offset-4">
               View the setup transaction
             </a>
           </div>
-          <div className="rounded-xl border border-line bg-surface p-5">
-            <h2 className="font-serif text-lg">Give your heir the inheritance packet</h2>
+          <div className="rounded-[var(--radius-card)] border border-line p-6">
+            <h2 className="text-[19px] font-semibold tracking-[-0.01em]">Give your heir the inheritance packet</h2>
             <p className="mt-1 text-muted">It holds both pre-approved transactions, so your heir can claim even if Riktha disappears. It contains no secrets and can&apos;t be used early.</p>
             <a href={`/api/plans/${draft.planId}/packet`} download className={primary + " mt-4 inline-block"}>Download packet</a>
-            {heirEmail && <p className="mt-3 text-sm text-muted">We&apos;ll also email it to {heirEmail}.</p>}
+            {heirEmail && <p className="mt-3 text-[14px] text-muted">We&apos;ll also email it to {heirEmail}.</p>}
           </div>
           {heirKind === "kit" && (
-            <div className="rounded-xl border border-line bg-surface p-5">
-              <h2 className="font-serif text-lg">Pass on the claim code privately</h2>
+            <div className="rounded-[var(--radius-card)] border border-line p-6">
+              <h2 className="text-[19px] font-semibold tracking-[-0.01em]">Pass on the claim code privately</h2>
               <p className="mt-1 text-muted">We never see your code and can&apos;t recover it. Put it with your will, or in a sealed letter for {heirEmail}. If it&apos;s ever exposed, change your heir to get a new code.</p>
             </div>
           )}
@@ -265,42 +265,53 @@ export default function NewPlan() {
         </div>
       )}
 
-      <p aria-live="polite" className="text-sm text-muted">{busy ? BUSY_LABEL[busy] : ""}</p>
+      <p aria-live="polite" className="text-[14px] text-muted">{busy ? BUSY_LABEL[busy] : ""}</p>
       <ErrorBox error={error} />
     </Shell>
   );
 }
 
-const primary = "rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-paper hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-50";
-const secondary = "rounded-full border border-line px-5 py-2.5 text-sm font-medium hover:border-muted disabled:opacity-50";
+const primary = btn.primary;
+const secondary = btn.secondary;
 
-function Shell({ children }: { children: React.ReactNode }) {
-  return <main className="mx-auto w-full max-w-2xl space-y-6 px-4 py-12 sm:px-6">{children}</main>;
-}
+const STEPS: [Step, string, string][] = [
+  ["heir", "Heir", "Who inherits, and how they'll claim"],
+  ["timing", "Timing", "How long Riktha waits before a claim"],
+  ["review", "Review & sign", "One signature, everything spelled out"],
+  ["done", "Armed", "Hand over the packet and the code"],
+];
 
-function Progress({ step }: { step: Step }) {
-  const steps: [Step, string][] = [["heir", "Heir"], ["timing", "Timing"], ["review", "Review & sign"], ["done", "Armed"]];
-  const at = steps.findIndex(([s]) => s === step);
+function Shell({ children, step }: { children: React.ReactNode; step?: Step }) {
   return (
-    <ol className="flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label="Progress">
-      {steps.map(([s, label], i) => (
-        <li key={s} aria-current={i === at ? "step" : undefined} className={i === at ? "font-medium text-ink" : i < at ? "text-accent" : "text-muted"}>
-          {i < at ? "✓ " : `${i + 1}. `}{label}
-        </li>
-      ))}
-    </ol>
+    <AppMain>
+      <div className="grid items-start gap-5 lg:grid-cols-[300px_1fr]">
+        <aside className="on-night rounded-[var(--radius-slab)] bg-night p-6 text-white night-grid lg:sticky lg:top-24">
+          <p className="text-[14px] text-white/55">New inheritance plan</p>
+          <ol className="mt-5 space-y-1" aria-label="Progress">
+            {STEPS.map(([key, label, hint], i) => {
+              const at = STEPS.findIndex(([k]) => k === step);
+              const done = step !== undefined && i < at, active = key === step;
+              return (
+                <li key={key} aria-current={active ? "step" : undefined} className={`rounded-2xl px-3 py-2.5 ${active ? "bg-white/10" : ""}`}>
+                  <p className={`flex items-center gap-3 text-[15px] font-medium ${active ? "text-white" : done ? "text-glow" : "text-white/45"}`}>
+                    <span className="grid h-6 w-6 place-items-center rounded-full border border-current font-mono text-[11px]">{done ? "✓" : i + 1}</span>{label}
+                  </p>
+                  {active && <p className="mt-1 pl-9 text-[13px] text-white/55">{hint}</p>}
+                </li>
+              );
+            })}
+          </ol>
+        </aside>
+        <div className="min-w-0 rounded-[var(--radius-slab)] bg-surface p-6 sm:p-10">
+          <div className="space-y-6">{children}</div>
+        </div>
+      </div>
+    </AppMain>
   );
 }
 
 function ErrorBox({ error }: { error?: { message: string; details?: string[] } }) {
-  if (!error) return null;
-  const extra = (error.details ?? []).filter((d) => d !== error.message);
-  return (
-    <div role="alert" className="rounded-xl border border-danger/40 bg-danger/5 p-4 text-sm text-danger">
-      <p>{error.message}</p>
-      {extra.length > 0 && <ul className="mt-2 list-disc pl-5">{extra.map((d) => <li key={d}>{d}</li>)}</ul>}
-    </div>
-  );
+  return <UiErrorBox message={error?.message} details={error?.details} />;
 }
 
 const esc = (x: string) => x.replace(/[<>&"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" })[c]!);
@@ -315,18 +326,21 @@ function ClaimCodeCard({ code, saved, onSaved, email }: { code: string; saved: b
     w.print();
   };
   return (
-    <section className="rounded-xl border-2 border-accent bg-surface p-5">
-      <h3 className="font-serif text-lg">Your heir&apos;s claim code</h3>
-      <p className="mt-1 text-sm text-muted">Write these six words down in order. Your heir needs them to claim. They&apos;re shown only now, and Riktha never sees them.</p>
-      <ol className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+    <section className="on-night rounded-[var(--radius-slab)] bg-night p-6 text-white night-grid sm:p-8">
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <h3 className="text-[19px] font-semibold tracking-[-0.01em]">Your heir&apos;s claim code</h3>
+        <span className="font-mono text-[12px] text-white/50">shown once</span>
+      </div>
+      <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-white/65">Write these six words down in order and keep them with your will. Your heir needs them to claim. Riktha never sees them.</p>
+      <ol className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3">
         {words.map((w, i) => (
-          <li key={i} className="rounded-lg border border-line bg-paper px-3 py-2 font-mono"><span className="mr-2 text-xs text-muted">{i + 1}</span>{w}</li>
+          <li key={i} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 font-mono text-[17px]"><span className="mr-3 text-[12px] text-white/40">{i + 1}</span>{w}</li>
         ))}
       </ol>
-      <div className="mt-4 flex flex-wrap items-center gap-4">
-        <button type="button" onClick={print} className={secondary}>Print</button>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={saved} onChange={(e) => onSaved(e.target.checked)} className="h-4 w-4 accent-[var(--accent)]" />
+      <div className="mt-6 flex flex-wrap items-center gap-4">
+        <button type="button" onClick={print} className={btn.ghostNight}>Print</button>
+        <label className="flex cursor-pointer items-center gap-3 text-[15px]">
+          <input type="checkbox" checked={saved} onChange={(e) => onSaved(e.target.checked)} className="h-5 w-5 accent-[var(--glow)]" />
           I&apos;ve written down the code and will keep it safe
         </label>
       </div>

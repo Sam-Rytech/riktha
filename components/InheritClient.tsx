@@ -27,7 +27,7 @@ export default function InheritClient() {
   }, [id]);
 
   return (
-    <main className="mx-auto w-full max-w-2xl space-y-6 px-4 py-10 sm:px-6">
+    <main className="mx-auto w-full max-w-3xl space-y-5 px-[var(--inset)] pb-6 pt-8 sm:pt-12">
       {packet ? <KitClaim packet={packet} /> : error ? <ErrorBox message={error} /> : <p className="text-muted">Loading…</p>}
     </main>
   );

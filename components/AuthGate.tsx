@@ -2,22 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { signIn, whoAmI } from "@/lib/wallet/session";
-import { btn, ErrorBox } from "./ui";
+import { btn, ErrorBox, NightPanel } from "./ui";
 
 /** Renders children with the signed-in address, or a sign-in prompt. */
 export default function AuthGate({ title, intro, children }: { title: string; intro: string; children: (address: string) => React.ReactNode }) {
   const [me, setMe] = useState<string | null | undefined>(undefined);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
   useEffect(() => { whoAmI().then(setMe).catch(() => setMe(null)); }, []);
 
-  if (me === undefined) return <p className="text-muted">Loading…</p>;
+  if (me === undefined) return <div className="h-64 animate-pulse rounded-[var(--radius-slab)] bg-surface/60" aria-label="Loading" />;
   if (me) return <>{children(me)}</>;
   return (
-    <div className="space-y-4">
-      <h1 className="font-serif text-3xl">{title}</h1>
-      <p className="text-muted">{intro}</p>
-      <button className={btn.primary} onClick={() => signIn().then(setMe).catch((e) => setError(e.message))}>Sign in with Freighter</button>
-      <ErrorBox message={error} />
-    </div>
+    <NightPanel className="py-14 text-center sm:py-20">
+      <h1 className="headline mx-auto max-w-xl text-[32px] sm:text-[48px]">{title}</h1>
+      <p className="mx-auto mt-4 max-w-md text-[17px] leading-relaxed text-white/65">{intro}</p>
+      <button disabled={busy} className={btn.light + " mt-8"}
+        onClick={() => { setBusy(true); setError(undefined); signIn().then(setMe).catch((e) => setError(e.message)).finally(() => setBusy(false)); }}>
+        {busy ? "Check Freighter…" : "Sign in with Freighter"}
+      </button>
+      <p className="mt-4 text-[13px] text-white/45">Freighter must be set to Testnet.</p>
+      {error && <div className="mx-auto mt-6 max-w-md text-left"><ErrorBox message={error} /></div>}
+    </NightPanel>
   );
 }

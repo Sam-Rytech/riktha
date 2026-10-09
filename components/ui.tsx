@@ -207,12 +207,12 @@ export function Stepper({ steps, current, onNight = false }: { steps: string[]; 
 }
 
 /** Plan stages Armed → Notice → Handover, current one highlighted. */
-export function Timeline({ state }: { state: string }) {
+export function Timeline({ state, onNight = false }: { state: string; onNight?: boolean }) {
   const stage = ["NOTICE", "CLAIMABLE"].includes(state) ? 1 : state === "INHERITED" ? 2 : 0;
   const dimmed = ["CANCELLED", "REVOKED", "BROKEN"].includes(state);
   return (
     <div className={dimmed ? "opacity-50" : ""}>
-      <Stepper steps={["Armed: clock running", "Notice: you can cancel", "Handover: heir can sign"]} current={stage} />
+      <Stepper onNight={onNight} steps={["Armed: clock running", "Notice: you can cancel", "Handover: heir can sign"]} current={stage} />
     </div>
   );
 }
@@ -231,3 +231,18 @@ export function Field({ label, hint, error, children, optional }: { label: strin
 }
 
 export const inputCls = "w-full rounded-[var(--radius-field)] border border-line bg-surface px-3.5 py-3 text-[15px] outline-none transition-colors placeholder:text-muted/60 focus:border-green aria-[invalid=true]:border-oxblood";
+
+/* ---------- App page container ---------- */
+
+export function AppMain({ children, width = "wide" }: { children: React.ReactNode; width?: "wide" | "narrow" }) {
+  return (
+    <main className={`mx-auto w-full px-[var(--inset)] pb-6 pt-8 sm:pt-12 ${width === "wide" ? "max-w-6xl" : "max-w-3xl"}`}>
+      <div className="space-y-5">{children}</div>
+    </main>
+  );
+}
+
+/** Dark hero panel for app screens (status, inheritance). */
+export function NightPanel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <section className={`on-night relative overflow-hidden rounded-[var(--radius-slab)] bg-night p-6 text-white night-grid sm:p-9 ${className}`}>{children}</section>;
+}

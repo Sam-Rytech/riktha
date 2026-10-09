@@ -56,7 +56,7 @@ export default function ClaimActions({ info, onChanged }: { info: ClaimInfo; onC
       )}
       {info.state === "ELIGIBLE" && (
         <Card tone="accent">
-          <h2 className="font-serif text-xl">The owner&apos;s inactivity window has passed</h2>
+          <h2 className="text-[19px] font-semibold tracking-[-0.01em]">The owner&apos;s inactivity window has passed</h2>
           <p className="mt-1 text-muted">Starting the claim publicly notifies the owner and begins the grace period. It moves nothing. Riktha usually does this automatically.</p>
           {buttons(1, "Start the claim")}
         </Card>
@@ -66,7 +66,7 @@ export default function ClaimActions({ info, onChanged }: { info: ClaimInfo; onC
       )}
       {info.state === "CLAIMABLE" && (
         <Card tone="accent">
-          <h2 className="font-serif text-xl">You can complete the handover</h2>
+          <h2 className="text-[19px] font-semibold tracking-[-0.01em]">You can complete the handover</h2>
           <p className="mt-1 text-muted">This adds your key as a signer on the owner&apos;s account. Then you can move the assets.</p>
           {buttons(2, "Complete the handover")}
         </Card>
@@ -77,7 +77,7 @@ export default function ClaimActions({ info, onChanged }: { info: ClaimInfo; onC
       {info.state === "BROKEN" && <Card><p>The owner&apos;s account no longer matches this plan.</p></Card>}
       <p className="text-xs text-muted">&ldquo;Submit without a wallet&rdquo; lets the owner&apos;s account pay the 0.00001 XLM network fee itself.</p>
       <Status text={busy} />
-      {hash && !busy && <p className="text-sm">✓ Sent · <a className={btn.link} href={explorerTxUrl(NETWORK, hash)} target="_blank" rel="noreferrer">view transaction</a></p>}
+      {hash && !busy && <p className="text-sm">✓ Sent. <a className={btn.link} href={explorerTxUrl(NETWORK, hash)} target="_blank" rel="noreferrer">View the transaction</a></p>}
       <ErrorBox message={error} />
     </div>
   );

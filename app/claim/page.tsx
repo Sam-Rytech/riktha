@@ -50,9 +50,9 @@ export default function ClaimPage() {
   }, [packet, refresh]);
 
   return (
-    <main className="mx-auto w-full max-w-3xl space-y-6 px-4 py-10 sm:px-6">
+    <main className="mx-auto w-full max-w-3xl space-y-5 px-[var(--inset)] pb-6 pt-8 sm:pt-12">
       <div>
-        <h1 className="font-serif text-3xl">Claim with an inheritance packet</h1>
+        <h1 className="headline text-[30px] sm:text-[40px]">Claim with an inheritance packet</h1>
         <p className="mt-2 text-muted">
           This page needs nothing from Riktha&apos;s servers: it checks the packet in your browser, reads the owner&apos;s account
           straight from the Stellar network, and submits the pre-approved transactions there. No sign-in.
@@ -63,14 +63,14 @@ export default function ClaimPage() {
         <Card>
           <label className="block">
             <span className="text-sm font-medium">Choose the packet file</span>
-            <input type="file" accept="application/json,.json" className="mt-2 block w-full text-sm file:mr-3 file:rounded-full file:border-0 file:bg-accent file:px-4 file:py-2 file:text-paper"
+            <input type="file" accept="application/json,.json" className="mt-2 block w-full text-sm file:mr-3 file:rounded-full file:border-0 file:bg-green file:px-4 file:py-2 file:text-white"
               onChange={async (e) => { const f = e.target.files?.[0]; if (f) accept(await f.text()); }} />
           </label>
           <p className="my-4 text-center text-xs uppercase tracking-widest text-muted">or</p>
           <label className="block">
             <span className="text-sm font-medium">Paste its contents</span>
             <textarea value={pasted} onChange={(e) => setPasted(e.target.value)} rows={5} spellCheck={false}
-              className="mt-1 w-full rounded-lg border border-line bg-paper p-3 font-mono text-xs outline-none focus:border-accent" placeholder='{ "riktha": "packet/v1", … }' />
+              className="mt-1 w-full rounded-[var(--radius-field)] border border-line bg-paper p-3 font-mono text-xs outline-none focus:border-accent" placeholder='{ "riktha": "packet/v1", … }' />
           </label>
           <button onClick={() => accept(pasted)} disabled={!pasted.trim()} className={btn.primary + " mt-3"}>Check packet</button>
         </Card>
@@ -86,8 +86,8 @@ export default function ClaimPage() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-sm text-muted">✓ Packet verified: hashes, sequences and conditions all match.</p>
-                <h2 className="mt-1 font-serif text-xl">Owner <span className="font-mono text-base" title={packet.owner}>{short(packet.owner)}</span> → heir <span className="font-mono text-base" title={packet.heir}>{short(packet.heir)}</span></h2>
-                <p className="text-sm text-muted">Inactivity {formatDuration(packet.inactivitySeconds)} · grace {formatDuration(packet.graceSeconds)}</p>
+                <h2 className="mt-1 text-[19px] font-semibold tracking-[-0.01em]">Owner <span className="font-mono text-base" title={packet.owner}>{short(packet.owner)}</span> → heir <span className="font-mono text-base" title={packet.heir}>{short(packet.heir)}</span></h2>
+                <p className="text-sm text-muted">Waits {formatDuration(packet.inactivitySeconds)}, then {formatDuration(packet.graceSeconds)} for the owner to respond</p>
               </div>
               {derived && <StateBadge state={derived.state} />}
             </div>

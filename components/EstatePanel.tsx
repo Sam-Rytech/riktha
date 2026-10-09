@@ -63,7 +63,7 @@ export default function EstatePanel({ owner, heir }: { owner: string; heir: stri
 
   return (
     <Card>
-      <h2 className="font-serif text-xl">The estate</h2>
+      <h2 className="text-[19px] font-semibold tracking-[-0.01em]">The estate</h2>
       <p className="mt-1 text-sm text-muted">
         Balances held by {short(owner)}. Each transfer is signed with your own key and pays its fee from your account.
         A small amount of XLM must stay behind as the account&apos;s minimum balance.
@@ -86,7 +86,7 @@ export default function EstatePanel({ owner, heir }: { owner: string; heir: stri
         </ul>
       )}
       {Object.entries(done).map(([k, h]) => (
-        <p key={k} className="mt-2 text-sm">✓ Moved {k === "native" ? "XLM" : k.split(":")[0]} · <a className={btn.link} href={explorerTxUrl(NETWORK, h)} target="_blank" rel="noreferrer">view transaction</a></p>
+        <p key={k} className="mt-2 text-sm">✓ Moved {k === "native" ? "XLM" : k.split(":")[0]}. <a className={btn.link} href={explorerTxUrl(NETWORK, h)} target="_blank" rel="noreferrer">View the transaction</a></p>
       ))}
       <Status text={busy ? "Waiting for Freighter and the network…" : undefined} />
       <ErrorBox message={error} />

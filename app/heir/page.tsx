@@ -11,7 +11,7 @@ import { formatDuration } from "@/lib/core/eligibility";
 
 export default function HeirPage() {
   return (
-    <main className="mx-auto w-full max-w-3xl space-y-6 px-4 py-10 sm:px-6">
+    <main className="mx-auto w-full max-w-3xl space-y-5 px-[var(--inset)] pb-6 pt-8 sm:pt-12">
       <AuthGate title="Plans naming you" intro="Sign in with the account an owner named as their heir.">
         {() => <Heir />}
       </AuthGate>
@@ -42,7 +42,7 @@ function Heir() {
   if (!plans) return <><p className="text-muted">Loading…</p><ErrorBox message={error} /></>;
   return (
     <div className="space-y-6">
-      <h1 className="font-serif text-3xl">Plans naming you</h1>
+      <h1 className="headline text-[30px] sm:text-[40px]">Plans naming you</h1>
       {plans.length === 0 && (
         <Card>
           <p>No plans name this account yet.</p>
@@ -50,11 +50,11 @@ function Heir() {
         </Card>
       )}
       {plans.map((p) => (
-        <section key={p.id} className="space-y-4 rounded-2xl border border-line p-5">
+        <section key={p.id} className="space-y-4 rounded-[var(--radius-slab)] bg-surface p-6 sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="font-serif text-xl">Account <span className="font-mono text-base" title={p.owner}>{short(p.owner)}</span></h2>
-              <p className="text-sm text-muted">Inactivity {formatDuration(p.inactivitySeconds)} · grace {formatDuration(p.graceSeconds)}</p>
+              <h2 className="text-[19px] font-semibold tracking-[-0.01em]">Account <span className="font-mono text-base" title={p.owner}>{short(p.owner)}</span></h2>
+              <p className="text-sm text-muted">Waits {formatDuration(p.inactivitySeconds)}, then {formatDuration(p.graceSeconds)} for the owner to respond</p>
             </div>
             <StateBadge state={p.state} />
           </div>

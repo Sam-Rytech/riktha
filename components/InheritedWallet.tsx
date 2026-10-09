@@ -60,7 +60,7 @@ export default function InheritedWallet({ heir, owner }: { heir: Keypair; owner:
   return (
     <div className="space-y-4">
       <Card>
-        <h2 className="font-serif text-xl">The inheritance is yours</h2>
+        <h2 className="text-[19px] font-semibold tracking-[-0.01em]">The inheritance is yours</h2>
         <p className="mt-1 text-muted">
           You now control Stellar account <span className="font-mono" title={owner}>{short(owner)}</span>. Send its funds to a wallet
           or exchange account you use. Network fees (a fraction of a cent) come out of the account itself.
@@ -78,19 +78,19 @@ export default function InheritedWallet({ heir, owner }: { heir: Keypair; owner:
 
       {bals && bals.length > 0 && (
         <Card>
-          <h2 className="font-serif text-xl">Send funds</h2>
+          <h2 className="text-[19px] font-semibold tracking-[-0.01em]">Send funds</h2>
           {!review ? (
             <form onSubmit={(e) => { e.preventDefault(); if (validTo && validAmount) setReview(true); }} className="mt-4 space-y-4">
               <label className="block">
                 <span className="text-sm font-medium">To (a Stellar address starting with G)</span>
                 <input value={to} onChange={(e) => setTo(e.target.value)} spellCheck={false} autoComplete="off" placeholder="G…"
-                  aria-invalid={to !== "" && !validTo} className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2.5 font-mono text-sm focus:border-accent" />
+                  aria-invalid={to !== "" && !validTo} className="mt-1 w-full rounded-[var(--radius-field)] border border-line bg-surface px-3.5 py-3 font-mono text-sm focus:border-accent" />
                 {to !== "" && !validTo && <span className="mt-1 block text-sm text-danger">Enter a valid Stellar address (56 characters, starting with G).</span>}
               </label>
               <div className="grid gap-4 sm:grid-cols-[1fr_2fr]">
                 <label className="block">
                   <span className="text-sm font-medium">Asset</span>
-                  <select value={assetKey} onChange={(e) => { setAssetKey(e.target.value); setAmount(""); }} className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2.5 text-sm">
+                  <select value={assetKey} onChange={(e) => { setAssetKey(e.target.value); setAmount(""); }} className="mt-1 w-full rounded-[var(--radius-field)] border border-line bg-surface px-3.5 py-3 text-sm">
                     {bals.map((b) => <option key={b.key} value={b.key}>{b.code}</option>)}
                   </select>
                 </label>
@@ -98,7 +98,7 @@ export default function InheritedWallet({ heir, owner }: { heir: Keypair; owner:
                   <span className="text-sm font-medium">Amount</span>
                   <div className="mt-1 flex gap-2">
                     <input value={amount} onChange={(e) => setAmount(e.target.value.trim())} inputMode="decimal" placeholder="0.00"
-                      className="w-full rounded-lg border border-line bg-paper px-3 py-2.5 font-mono text-sm focus:border-accent" />
+                      className="w-full rounded-[var(--radius-field)] border border-line bg-surface px-3.5 py-3 font-mono text-sm focus:border-accent" />
                     <button type="button" onClick={() => sel && setAmount(sel.sendable)} className={btn.secondary}>Max</button>
                   </div>
                   {amount !== "" && !validAmount && <span className="mt-1 block text-sm text-danger">Enter an amount up to {sel?.sendable} {sel?.code}.</span>}
@@ -107,7 +107,7 @@ export default function InheritedWallet({ heir, owner }: { heir: Keypair; owner:
               <label className="block">
                 <span className="text-sm font-medium">Memo <span className="font-normal text-muted">(required by most exchanges; copy it from their deposit page)</span></span>
                 <input value={memo} onChange={(e) => setMemo(e.target.value)} maxLength={28} autoComplete="off"
-                  className="mt-1 w-full rounded-lg border border-line bg-paper px-3 py-2.5 text-sm focus:border-accent" />
+                  className="mt-1 w-full rounded-[var(--radius-field)] border border-line bg-surface px-3.5 py-3 text-sm focus:border-accent" />
               </label>
               <button type="submit" disabled={!validTo || !validAmount} className={btn.primary}>Review</button>
             </form>
@@ -124,7 +124,7 @@ export default function InheritedWallet({ heir, owner }: { heir: Keypair; owner:
           <Status text={busy ? "Sending to the Stellar network…" : undefined} />
           <ErrorBox message={error} />
           {sent.map((s) => (
-            <p key={s.hash} className="mt-2 text-sm">✓ Sent {s.text} · <a className={btn.link} href={explorerTxUrl(NETWORK, s.hash)} target="_blank" rel="noreferrer">view transaction</a></p>
+            <p key={s.hash} className="mt-2 text-sm">✓ Sent {s.text}. <a className={btn.link} href={explorerTxUrl(NETWORK, s.hash)} target="_blank" rel="noreferrer">View the transaction</a></p>
           ))}
         </Card>
       )}

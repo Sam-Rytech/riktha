@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import AuthGate from "@/components/AuthGate";
 import Inbox from "@/components/Inbox";
 import TxReview from "@/components/TxReview";
-import { btn, Card, Countdown, ErrorBox, fmtDate, short, StateBadge, Status, Timeline } from "@/components/ui";
+import { AppMain, btn, Card, CountdownRing, ErrorBox, fmtDate, NightPanel, short, StateBadge, Status, Timeline } from "@/components/ui";
 import { checkIn, NETWORK, signAndSubmit } from "@/lib/client/actions";
 import { api, confirmPlan, type Draft, type InboxItem, type PlanView } from "@/lib/client/api";
 import { formatDuration } from "@/lib/core/eligibility";
@@ -13,11 +13,11 @@ import { explorerTxUrl } from "@/lib/stellar/horizon";
 
 export default function DashboardPage() {
   return (
-    <main className="mx-auto w-full max-w-3xl space-y-6 px-4 py-10 sm:px-6">
+    <AppMain>
       <AuthGate title="Your dashboard" intro="Sign in with the account your plan protects.">
         {(me) => <Dashboard me={me} />}
       </AuthGate>
-    </main>
+    </AppMain>
   );
 }
 
@@ -80,111 +80,121 @@ function Dashboard({ me }: { me: string }) {
     return hash;
   });
 
-  if (plan === undefined) return <p className="text-muted">Loading your plan…</p>;
+  if (plan === undefined) return <div className="h-72 animate-pulse rounded-[var(--radius-slab)] bg-surface/60" aria-label="Loading your plan" />;
   if (plan === null) {
     return (
-      <div className="space-y-4">
-        <h1 className="font-serif text-3xl">No plan yet</h1>
-        <p className="text-muted">Create a plan to name an heir for {short(me)}. It takes one signature.</p>
-        <Link href="/plan/new" className={btn.primary}>Create your plan</Link>
+      <>
+        <NightPanel className="py-12 sm:py-16">
+          <h1 className="headline max-w-xl text-[32px] sm:text-[48px]">No plan yet</h1>
+          <p className="mt-3 max-w-lg text-[17px] leading-relaxed text-white/65">Name an heir for <span className="font-mono">{short(me)}</span>. It takes about two minutes and one signature.</p>
+          <Link href="/plan/new" className={btn.light + " mt-7"}>Create your plan</Link>
+        </NightPanel>
         <Inbox items={inbox} />
-      </div>
+      </>
     );
   }
 
   const s = plan.state;
   const urgent = s === "NOTICE" || s === "CLAIMABLE";
+  const active = !["REVOKED", "INHERITED"].includes(s);
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-serif text-3xl">Your plan</h1>
-        <StateBadge state={s} />
-      </div>
-
+    <>
       {urgent && (
-        <Card tone="danger">
-          <h2 className="font-serif text-xl text-danger">A claim on your account has started</h2>
-          <p className="mt-2">
+        <section role="alert" className="rounded-[var(--radius-slab)] bg-oxblood p-6 text-white sm:p-9">
+          <h2 className="headline text-[28px] sm:text-[40px]">A claim on your account has started</h2>
+          <p className="mt-3 max-w-2xl text-[17px] leading-relaxed text-white/85">
             {s === "NOTICE"
-              ? <>Your heir can take over on <b>{fmtDate(plan.claimableAt)}</b> unless you act. If you&apos;re here, cancel it now.</>
+              ? <>Your heir can take over on <b>{fmtDate(plan.claimableAt)}</b> unless you act. If you&apos;re reading this, cancel it now.</>
               : <>The grace period is over and your heir can take over at any moment. Cancel now if you&apos;re still here.</>}
           </p>
-          <button onClick={aliveAction} disabled={!!busy} className={btn.danger + " mt-4"}>Cancel the claim</button>
-          <p className="mt-2 text-sm text-muted">Any transaction you send cancels the claim for good. You&apos;ll then re-arm your plan.</p>
-        </Card>
+          <button onClick={aliveAction} disabled={!!busy} className={btn.light + " mt-6"}>Cancel the claim</button>
+          <p className="mt-3 text-[14px] text-white/70">Any transaction you send cancels it for good. You&apos;ll then re-arm your plan.</p>
+        </section>
       )}
 
-      <Timeline state={s} />
-
-      {(s === "ARMED" || s === "ELIGIBLE") && (
-        <Card tone={s === "ELIGIBLE" ? "danger" : "accent"}>
-          <Countdown to={plan.eligibleAt} label={s === "ELIGIBLE" ? "Your inactivity window has passed. Check in now." : "A claim can start in"} />
-          <p className="mt-3 text-sm text-muted">Last activity: {fmtDate(plan.seqTime)}. Any transaction you send resets this clock; received payments don&apos;t.</p>
-          <button onClick={aliveAction} disabled={!!busy} className={btn.primary + " mt-4"}>I&apos;m alive</button>
-        </Card>
-      )}
-
-      {urgent && s === "NOTICE" && <Card><Countdown to={plan.claimableAt} label="Your heir can take over in" /></Card>}
-
-      {s === "CANCELLED" && (
-        <Card>
-          <h2 className="font-serif text-xl">The claim was cancelled</h2>
-          <p className="mt-1 text-muted">Your plan no longer protects you. Re-arm it with the same heir and windows; it takes one signature.</p>
-          {!draft && <button onClick={startRearm} disabled={!!busy} className={btn.primary + " mt-4"}>Re-arm plan</button>}
-        </Card>
-      )}
-
-      {s === "INHERITED" && <Card><h2 className="font-serif text-xl">Your heir is now a signer on this account</h2><p className="mt-1 text-muted">Your own key still works. To remove your heir, use any Stellar wallet&apos;s signer settings.</p></Card>}
-      {s === "REVOKED" && <Card><h2 className="font-serif text-xl">Plan revoked</h2><p className="mt-1 text-muted">No Riktha approvals remain on your account.</p><Link href="/plan/new" className={btn.primary + " mt-4"}>Create a new plan</Link></Card>}
-      {s === "BROKEN" && <ErrorBox message="Your account no longer matches this plan. Re-arm it to fix it." details={plan.diagnostics} />}
+      <NightPanel>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-[14px] text-white/55">Plan for <span className="font-mono">{short(me)}</span></p>
+            <h1 className="headline mt-1 text-[32px] sm:text-[44px]">Your plan</h1>
+          </div>
+          <StateBadge state={s} onNight />
+        </div>
+        <div className="mt-8 grid items-center gap-8 lg:grid-cols-[1fr_auto]">
+          <div>
+            {(s === "ARMED" || s === "ELIGIBLE") && (
+              <CountdownRing onNight to={plan.eligibleAt} total={plan.inactivitySeconds}
+                label={s === "ELIGIBLE" ? "Your window has passed. Check in now." : "A claim can start in"} />
+            )}
+            {s === "NOTICE" && <CountdownRing onNight to={plan.claimableAt} total={plan.graceSeconds} label="Your heir can take over in" />}
+            {s === "CLAIMABLE" && <p className="text-[19px] text-white/80">The grace period has ended.</p>}
+            {s === "CANCELLED" && <p className="max-w-lg text-[17px] leading-relaxed text-white/75">The claim was cancelled, so your plan no longer protects you. Re-arm it with the same heir and windows; it takes one signature.</p>}
+            {s === "INHERITED" && <p className="max-w-lg text-[17px] leading-relaxed text-white/75">Your heir is now a signer on this account. Your own key still works.</p>}
+            {s === "REVOKED" && <p className="max-w-lg text-[17px] leading-relaxed text-white/75">No Riktha approvals remain on your account.</p>}
+            {s === "BROKEN" && <p className="max-w-lg text-[17px] leading-relaxed text-white/75">Your account no longer matches this plan. Re-arm it to fix it.</p>}
+            {(s === "ARMED" || s === "ELIGIBLE") && <p className="mt-5 text-[14px] text-white/55">Last activity {fmtDate(plan.seqTime)}. Any transaction you send resets the clock; received payments don&apos;t.</p>}
+          </div>
+          <div className="flex flex-wrap gap-3 lg:flex-col">
+            {(s === "ARMED" || s === "ELIGIBLE") && <button onClick={aliveAction} disabled={!!busy} className={btn.light}>I&apos;m alive</button>}
+            {(s === "CANCELLED" || s === "BROKEN") && !draft && <button onClick={startRearm} disabled={!!busy} className={btn.light}>Re-arm plan</button>}
+            {s === "REVOKED" && <Link href="/plan/new" className={btn.light}>Create a new plan</Link>}
+          </div>
+        </div>
+        <div className="mt-8 border-t border-white/10 pt-6"><Timeline state={s} onNight /></div>
+      </NightPanel>
 
       {draft && (
-        <div className="space-y-3">
+        <Card tone="accent">
           <TxReview title="Sign now: re-arm the plan" badge="you sign" tx={draft.explain.setup}
             summary={`Removes ${draft.removesStaleSigners} leftover approval(s) and registers a fresh pair. Nothing moves.`} />
-          <div className="flex gap-3">
+          <div className="mt-4 flex gap-3">
             <button onClick={() => setDraft(undefined)} disabled={!!busy} className={btn.secondary}>Cancel</button>
             <button onClick={signRearm} disabled={!!busy} className={btn.primary}>Sign &amp; re-arm</button>
           </div>
-        </div>
+        </Card>
       )}
 
       <Status text={busy} />
-      {lastTx && !busy && <p className="text-sm">✓ Done · <a className={btn.link} href={explorerTxUrl(NETWORK, lastTx)} target="_blank" rel="noreferrer">view transaction</a></p>}
+      {lastTx && !busy && <p className="text-[15px]">✓ Done. <a className={btn.link} href={explorerTxUrl(NETWORK, lastTx)} target="_blank" rel="noreferrer">View the transaction</a></p>}
       <ErrorBox message={error?.message} details={error?.details} />
 
-      <Card>
-        <h2 className="font-serif text-xl">Plan details</h2>
-        <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-          <Detail k="Heir" v={plan.heirKind === "kit" ? <span>Claim kit (no wallet needed)</span> : <span className="font-mono" title={plan.heir}>{short(plan.heir)}</span>} />
-          <Detail k="Heir email" v={plan.heirEmail || "—"} />
-          <Detail k="Inactivity window" v={formatDuration(plan.inactivitySeconds)} />
-          <Detail k="Grace window" v={formatDuration(plan.graceSeconds)} />
-          <Detail k="Version" v={`v${plan.version}`} />
-          <Detail k="Armed" v={fmtDate(Math.floor(new Date(plan.createdAt).getTime() / 1000))} />
-        </dl>
-        <div className="mt-4 flex flex-wrap items-center gap-4">
-          <a href={`/api/plans/${plan.id}/packet`} download className={btn.secondary}>Download packet</a>
-          {plan.setupTxHash && <a className={btn.link} href={explorerTxUrl(NETWORK, plan.setupTxHash)} target="_blank" rel="noreferrer">Setup transaction</a>}
-          {!["REVOKED", "INHERITED"].includes(s) && <Link className={btn.link} href="/plan/new">Change heir or windows</Link>}
-          {!["REVOKED", "INHERITED"].includes(s) && !confirmRevoke && <button onClick={() => setConfirmRevoke(true)} className="text-sm text-danger underline underline-offset-4">Revoke plan</button>}
-        </div>
-        {confirmRevoke && (
-          <div className="mt-4 rounded-lg border border-danger/40 p-4 text-sm">
-            <p>Revoking removes every Riktha approval from your account. Your heir&apos;s packet stops working. Continue?</p>
-            <div className="mt-3 flex gap-3">
-              <button onClick={() => setConfirmRevoke(false)} className={btn.secondary}>Keep plan</button>
-              <button onClick={revoke} disabled={!!busy} className={btn.danger}>Revoke</button>
-            </div>
+      <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">
+        <Card>
+          <h2 className="text-[19px] font-semibold tracking-[-0.01em]">Plan details</h2>
+          <dl className="mt-4 divide-y divide-line text-[15px]">
+            <Detail k="Heir" v={plan.heirKind === "kit" ? "Claim kit (no wallet needed)" : <span className="font-mono" title={plan.heir}>{short(plan.heir)}</span>} />
+            <Detail k="Heir email" v={plan.heirEmail || "Not set"} />
+            <Detail k="Inactivity window" v={formatDuration(plan.inactivitySeconds)} />
+            <Detail k="Grace window" v={formatDuration(plan.graceSeconds)} />
+            <Detail k="Version" v={`v${plan.version}`} />
+          </dl>
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <a href={`/api/plans/${plan.id}/packet`} download className={btn.secondary}>Download packet</a>
+            {active && <Link className={btn.secondary} href="/plan/new">Change heir or windows</Link>}
+            {plan.setupTxHash && <a className={btn.link} href={explorerTxUrl(NETWORK, plan.setupTxHash)} target="_blank" rel="noreferrer">Setup transaction</a>}
           </div>
-        )}
-      </Card>
-
-      <Inbox items={inbox} />
-    </div>
+          {active && (
+            <div className="mt-6 border-t border-line pt-5">
+              {!confirmRevoke ? (
+                <button onClick={() => setConfirmRevoke(true)} className="text-[14px] text-oxblood underline decoration-oxblood/30 underline-offset-4 hover:decoration-oxblood">Revoke plan</button>
+              ) : (
+                <div className="rounded-2xl bg-oxblood-tint p-4 text-[15px]">
+                  <p>Revoking removes every Riktha approval from your account, and your heir&apos;s packet stops working. Continue?</p>
+                  <div className="mt-3 flex gap-3">
+                    <button onClick={() => setConfirmRevoke(false)} className={btn.secondary}>Keep plan</button>
+                    <button onClick={revoke} disabled={!!busy} className={btn.danger}>Revoke</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </Card>
+        <Inbox items={inbox} />
+      </div>
+    </>
   );
 }
 
 function Detail({ k, v }: { k: string; v: React.ReactNode }) {
-  return <div className="flex justify-between gap-3 border-b border-line py-1"><dt className="text-muted">{k}</dt><dd>{v}</dd></div>;
+  return <div className="flex justify-between gap-4 py-2.5"><dt className="text-muted">{k}</dt><dd className="text-right">{v}</dd></div>;
 }

@@ -13,47 +13,50 @@ const short = (h: string) => `${h.slice(0, 8)}…${h.slice(-6)}`;
 export default function EvidencePage() {
   const e = evidence;
   return (
-    <main className="mx-auto w-full max-w-4xl space-y-8 px-4 py-12 sm:px-6">
-      <header className="space-y-3">
-        <h1 className="font-serif text-4xl">{e.passed} of {e.total} scenarios pass on Stellar testnet</h1>
-        <p className="max-w-2xl text-muted">
-          Each scenario from the test plan was run against the live testnet with fresh accounts and
-          {` ${e.windows.inactivitySeconds}-second`} windows. Every transaction is public; follow a link to see it on stellar.expert.
-          Rejections are evidence too: they show the network itself refusing a claim that came too early or after the owner responded.
+    <main className="mx-auto w-full max-w-6xl space-y-5 px-[var(--inset)] pb-6 pt-8 sm:pt-12">
+      <section className="on-night rounded-[var(--radius-slab)] bg-night p-6 text-white night-grid sm:p-12">
+        <p className="font-mono text-[72px] leading-none tracking-tight text-glow sm:text-[120px]">{e.passed}/{e.total}</p>
+        <h1 className="headline mt-4 max-w-2xl text-[30px] sm:text-[48px]">scenarios proven on Stellar testnet</h1>
+        <p className="mt-4 max-w-2xl text-[17px] leading-relaxed text-white/65">
+          Each scenario from the test plan ran against the live testnet with fresh accounts and {e.windows.inactivitySeconds}-second windows.
+          Rejections are evidence too: they show the network itself refusing a claim that came too early, or after the owner responded.
         </p>
-        <p className="text-sm text-muted">Run {new Date(e.generatedAt).toUTCString()} · reproduce with <code className="font-mono">pnpm scenarios</code></p>
-      </header>
+        <p className="mt-6 text-[14px] text-white/50">
+          Run on {new Date(e.generatedAt).toUTCString()}. Reproduce it with <code className="rounded-md bg-white/10 px-1.5 py-0.5 font-mono">pnpm scenarios</code>.
+        </p>
+      </section>
 
-      <ol className="space-y-4">
+      <ol className="grid gap-4 md:grid-cols-2">
         {e.scenarios.map((s) => (
-          <li key={s.id} className="rounded-xl border border-line bg-surface p-5">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="font-serif text-xl"><span className="mr-2 font-mono text-sm text-muted">S{s.id}</span>{s.title}</h2>
-              <span className={`rounded-full border px-3 py-0.5 text-sm font-medium ${s.passed ? "border-accent text-accent" : "border-danger text-danger"}`}>
-                {s.passed ? "✓ Pass" : "× Fail"}
-              </span>
+          <li key={s.id} className="flex flex-col rounded-[var(--radius-card)] border border-line bg-surface p-6">
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="text-[17px] font-semibold tracking-[-0.01em]"><span className="mr-2 font-mono text-[13px] font-normal text-muted">{s.id}</span>{s.title}</h2>
+              <span className={`shrink-0 rounded-full px-3 py-1 font-mono text-[12px] ${s.passed ? "bg-green-tint text-green" : "bg-oxblood-tint text-oxblood"}`}>{s.passed ? "✓ pass" : "× fail"}</span>
             </div>
-            <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-[8rem_1fr]">
-              <dt className="text-muted">Expected</dt><dd>{s.expected}</dd>
-              <dt className="text-muted">Observed</dt><dd className="break-words">{s.observed}</dd>
-              {s.txHashes.length > 0 && (<>
-                <dt className="text-muted">Transactions</dt>
-                <dd className="flex flex-wrap gap-x-4 gap-y-1">
-                  {s.txHashes.map((h) => (
-                    <a key={h} href={`${explorer}/tx/${h}`} target="_blank" rel="noreferrer" className="font-mono text-accent underline underline-offset-4">{short(h)}</a>
-                  ))}
-                </dd>
-              </>)}
+            <dl className="mt-4 space-y-3 text-[14px]">
+              <div><dt className="text-muted">Expected</dt><dd className="mt-0.5">{s.expected}</dd></div>
+              <div><dt className="text-muted">Observed</dt><dd className="mt-0.5 break-words">{s.observed}</dd></div>
             </dl>
+            {s.txHashes.length > 0 && (
+              <div className="mt-auto flex flex-wrap gap-2 pt-5">
+                {s.txHashes.map((h) => (
+                  <a key={h} href={`${explorer}/tx/${h}`} target="_blank" rel="noreferrer"
+                    className="rounded-full border border-line px-3 py-1.5 font-mono text-[12px] text-green hover:border-green">{short(h)}</a>
+                ))}
+              </div>
+            )}
           </li>
         ))}
       </ol>
 
-      <section className="rounded-xl border border-line p-5 text-sm">
-        <h2 className="font-serif text-lg">Accounts used</h2>
-        <ul className="mt-2 space-y-1">
+      <section className="rounded-[var(--radius-slab)] bg-surface p-6 sm:p-8">
+        <h2 className="text-[19px] font-semibold tracking-[-0.01em]">Accounts used</h2>
+        <ul className="mt-4 grid gap-2 text-[14px] md:grid-cols-2">
           {Object.entries(e.accounts).map(([k, v]) => (
-            <li key={k}><span className="text-muted">{k}: </span><a href={`${explorer}/account/${v}`} target="_blank" rel="noreferrer" className="break-all font-mono text-accent underline underline-offset-4">{v}</a></li>
+            <li key={k} className="rounded-2xl bg-stone px-4 py-3">
+              <p className="text-muted">{k}</p>
+              <a href={`${explorer}/account/${v}`} target="_blank" rel="noreferrer" className="break-all font-mono text-[12px] text-green hover:underline">{v}</a>
+            </li>
           ))}
         </ul>
       </section>

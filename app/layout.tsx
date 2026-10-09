@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Instrument_Sans, Instrument_Serif } from "next/font/google";
 import Link from "next/link";
+import { Suspense } from "react";
 import AccountMismatch from "@/components/AccountMismatch";
 import SiteHeader, { Wordmark } from "@/components/SiteHeader";
 import "./globals.css";
@@ -19,7 +20,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${body.variable} ${accent.variable} ${code.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col font-sans">
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-ink focus:px-4 focus:py-2 focus:text-white">Skip to content</a>
-        <SiteHeader />
+        {/* SiteHeader reads the pathname (runtime data), so it streams in behind a Suspense boundary. */}
+        <Suspense fallback={<div className="h-[72px]" aria-hidden />}>
+          <SiteHeader />
+        </Suspense>
         <AccountMismatch />
         <div id="main" className="flex flex-1 flex-col">{children}</div>
         <footer className="slab mb-[var(--inset)] mt-16 bg-surface">
