@@ -26,29 +26,23 @@ export default function ConnectButton() {
     }
   };
 
-  const onSignOut = async () => {
-    await signOut();
-    setAddress(null);
-  };
-
   if (address) {
     return (
-      <div className="flex items-center gap-3 text-sm">
-        <span className="rounded-full border border-line px-3 py-1 font-mono" title={address}>{short(address)}</span>
-        <button onClick={onSignOut} className="text-muted underline-offset-4 hover:underline">Sign out</button>
+      <div className="flex items-center gap-1">
+        <span className="inline-flex items-center gap-2 rounded-full bg-stone px-3 py-2 font-mono text-[13px]" title={address}>
+          <span aria-hidden className="h-2 w-2 rounded-full bg-green" />{short(address)}
+        </span>
+        <button onClick={async () => { await signOut(); setAddress(null); }} className="rounded-full px-3 py-2 text-[13px] text-muted hover:bg-ink/5 hover:text-ink">Sign out</button>
       </div>
     );
   }
   return (
-    <div className="flex flex-col items-end gap-1">
-      <button
-        onClick={onSignIn}
-        disabled={busy}
-        className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-paper hover:bg-accent-strong disabled:opacity-60"
-      >
-        {busy ? "Check Freighter…" : "Sign in with Freighter"}
+    <div className="relative">
+      <button onClick={onSignIn} disabled={busy}
+        className="rounded-full bg-ink px-4 py-2.5 text-[14px] font-medium text-white transition-colors hover:bg-green disabled:opacity-60">
+        {busy ? "Check Freighter…" : "Sign in"}
       </button>
-      {error && <p role="alert" className="max-w-xs text-right text-xs text-danger">{error}</p>}
+      {error && <p role="alert" className="absolute right-0 top-full mt-2 w-64 rounded-xl border border-oxblood/30 bg-oxblood-tint p-3 text-[13px] text-oxblood">{error}</p>}
     </div>
   );
 }

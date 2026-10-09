@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { Fraunces, IBM_Plex_Mono, Inter } from "next/font/google";
+import { Geist_Mono, Instrument_Sans, Instrument_Serif } from "next/font/google";
 import Link from "next/link";
 import AccountMismatch from "@/components/AccountMismatch";
-import ConnectButton from "@/components/ConnectButton";
+import SiteHeader, { Wordmark } from "@/components/SiteHeader";
 import "./globals.css";
 
-const heading = Fraunces({ variable: "--font-heading", subsets: ["latin"] });
-const body = Inter({ variable: "--font-body", subsets: ["latin"] });
-const code = IBM_Plex_Mono({ variable: "--font-code", subsets: ["latin"], weight: ["400", "500"] });
+const body = Instrument_Sans({ variable: "--font-body", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
+const accent = Instrument_Serif({ variable: "--font-accent", subsets: ["latin"], weight: "400", style: ["italic", "normal"] });
+const code = Geist_Mono({ variable: "--font-code", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Riktha · Inheritance for Stellar accounts",
@@ -16,30 +16,26 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${heading.variable} ${body.variable} ${code.variable} h-full antialiased`}>
+    <html lang="en" className={`${body.variable} ${accent.variable} ${code.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col font-sans">
-        <header className="border-b border-line">
-          <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-4 sm:px-6">
-            <Link href="/" className="font-serif text-xl font-semibold tracking-tight">Riktha</Link>
-            <div className="order-last flex w-full items-center gap-5 overflow-x-auto text-sm sm:order-none sm:w-auto">
-              <nav aria-label="Main" className="flex items-center gap-5 whitespace-nowrap">
-                <Link href="/dashboard" className="underline-offset-4 hover:underline">Dashboard</Link>
-                <Link href="/heir" className="underline-offset-4 hover:underline">I&apos;m an heir</Link>
-                <Link href="/claim" className="underline-offset-4 hover:underline">Claim with packet</Link>
-                <Link href="/settings" className="underline-offset-4 hover:underline">Settings</Link>
-              </nav>
-            </div>
-            <ConnectButton />
-          </div>
-        </header>
+        <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-ink focus:px-4 focus:py-2 focus:text-white">Skip to content</a>
+        <SiteHeader />
         <AccountMismatch />
-        <div className="flex flex-1 flex-col">{children}</div>
-        <footer className="border-t border-line">
-          <div className="mx-auto flex max-w-5xl flex-wrap justify-between gap-3 px-4 py-6 text-sm text-muted sm:px-6">
-            <p>Riktha runs on Stellar testnet. It is unaudited and is not a legal will.</p>
-            <nav aria-label="Footer" className="flex gap-4">
-              <Link href="/evidence" className="underline-offset-4 hover:underline">Evidence</Link>
-              <a href="https://github.com/Sam-Rytech/riktha" className="underline-offset-4 hover:underline">Source</a>
+        <div id="main" className="flex flex-1 flex-col">{children}</div>
+        <footer className="slab mb-[var(--inset)] mt-16 bg-surface">
+          <div className="mx-auto grid max-w-6xl gap-8 px-6 py-10 sm:grid-cols-[1.4fr_1fr_1fr] sm:px-10">
+            <div>
+              <Wordmark />
+              <p className="mt-3 max-w-xs text-[14px] leading-relaxed text-muted">Inheritance for Stellar accounts, enforced by the protocol. Testnet preview, unaudited, and not a legal will.</p>
+            </div>
+            <nav aria-label="Product" className="flex flex-col gap-2 text-[14px]">
+              <Link href="/plan/new" className="hover:text-green">Create a plan</Link>
+              <Link href="/claim" className="hover:text-green">Claim with a packet</Link>
+              <Link href="/evidence" className="hover:text-green">Evidence on testnet</Link>
+            </nav>
+            <nav aria-label="Project" className="flex flex-col gap-2 text-[14px]">
+              <a href="https://github.com/Sam-Rytech/riktha" className="hover:text-green">Source code</a>
+              <a href="https://github.com/stellar/stellar-protocol/blob/master/core/cap-0021.md" className="hover:text-green">CAP-21 specification</a>
             </nav>
           </div>
         </footer>

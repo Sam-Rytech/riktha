@@ -1,55 +1,168 @@
 @import "tailwindcss";
 
-/* A§14: calm family ledger. Warm paper, deep ink, one restrained green accent. */
+/*
+ * Riktha design system (plan: front-end redesign).
+ * Light-led, cool stone ground, deep estate green; "night" slabs carry the drama; glow lives only on night.
+ */
 :root {
-  --paper: #f7f3ea;
-  --surface: #fffdf8;
-  --ink: #1d1b16;
-  --muted: #5f5a4e;
-  --line: #d9d1bf;
-  --accent: #1f4d3a;
-  --accent-strong: #163829;
-  --danger: #8a1c1c;
+  --stone: #eeefea;
+  --surface: #ffffff;
+  --ink: #0d1411;
+  --muted: #5a625d;
+  --line: #dfe1db;
+  --green: #1c4a34;
+  --green-strong: #133524;
+  --green-tint: #e2ece5;
+  --night: #0a110d;
+  --night-2: #121b16;
+  --night-line: #233029;
+  --glow: #4fd08f;
+  --oxblood: #9b2a24;
+  --oxblood-tint: #f5e4e2;
+
+  --radius-slab: 28px;
+  --radius-card: 16px;
+  --radius-field: 12px;
+  --inset: 12px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #15140f;
-    --surface: #1d1c16;
-    --ink: #ece6d6;
-    --muted: #a49d8b;
-    --line: #3a372c;
-    --accent: #7fb89a;
-    --accent-strong: #9fcfb4;
-    --danger: #e08a8a;
-  }
+@media (min-width: 640px) {
+  :root { --inset: 16px; }
 }
 
 @theme inline {
-  --color-paper: var(--paper);
+  --color-stone: var(--stone);
   --color-surface: var(--surface);
   --color-ink: var(--ink);
   --color-muted: var(--muted);
   --color-line: var(--line);
-  --color-accent: var(--accent);
-  --color-accent-strong: var(--accent-strong);
-  --color-danger: var(--danger);
+  --color-green: var(--green);
+  --color-green-strong: var(--green-strong);
+  --color-green-tint: var(--green-tint);
+  --color-night: var(--night);
+  --color-night-2: var(--night-2);
+  --color-night-line: var(--night-line);
+  --color-glow: var(--glow);
+  --color-oxblood: var(--oxblood);
+  --color-oxblood-tint: var(--oxblood-tint);
+  /* Aliases kept so older screens keep working while they're restyled. */
+  --color-paper: #f7f8f5;
+  --color-accent: var(--green);
+  --color-accent-strong: var(--green-strong);
+  --color-danger: var(--oxblood);
+
   --font-sans: var(--font-body);
-  --font-serif: var(--font-heading);
+  --font-serif: var(--font-accent);
   --font-mono: var(--font-code);
+
+  --radius-slab: var(--radius-slab);
+  --radius-card: var(--radius-card);
+  --radius-field: var(--radius-field);
 }
 
+html { background: var(--stone); }
 body {
-  background: var(--paper);
+  background: var(--stone);
   color: var(--ink);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
 }
+
+::selection { background: var(--green); color: #fff; }
 
 /* Visible keyboard focus everywhere (PRD §9 accessibility). */
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--green);
   outline-offset: 2px;
+  border-radius: 6px;
+}
+.on-night :focus-visible { outline-color: var(--glow); }
+
+/* Headline voice: tight grotesk. */
+@utility display {
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 0.95;
+}
+@utility headline {
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
 }
 
+/* Rounded slab inset from the window edge (Shamar-style rhythm). */
+@utility slab {
+  border-radius: var(--radius-slab);
+  margin-inline: var(--inset);
+}
+
+/* Faint grid texture for night slabs. */
+@utility night-grid {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 70% 20%, rgba(79, 208, 143, 0.10), transparent 60%),
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: auto, 48px 48px, 48px 48px;
+}
+
+/* Light travelling around a card's border (for the card in view). */
+@keyframes trace {
+  to { --trace-angle: 360deg; }
+}
+@property --trace-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+@utility trace-border {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(from var(--trace-angle), transparent 0deg, transparent 280deg, var(--glow) 330deg, transparent 360deg);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: trace 4s linear infinite;
+    opacity: var(--trace-opacity, 0);
+    transition: opacity 600ms ease;
+    pointer-events: none;
+  }
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.35; transform: scale(0.96); }
+  50% { opacity: 0.6; transform: scale(1.04); }
+}
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+@keyframes livedot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(79, 208, 143, 0.55); }
+  70% { box-shadow: 0 0 0 7px rgba(79, 208, 143, 0); }
+}
+@keyframes scan {
+  0% { transform: translateY(-10%); opacity: 0; }
+  10%, 90% { opacity: 1; }
+  100% { transform: translateY(110%); opacity: 0; }
+}
+@utility animate-breathe { animation: breathe 6s ease-in-out infinite; }
+@utility animate-marquee { animation: marquee 40s linear infinite; }
+@utility animate-livedot { animation: livedot 2s ease-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
-  * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+@media print {
+  header, footer, nav, .no-print { display: none !important; }
+  body { background: #fff; }
 }

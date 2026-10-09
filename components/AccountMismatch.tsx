@@ -31,8 +31,8 @@ export default function AccountMismatch() {
 
   if (!pair) return null;
   return (
-    <div role="alert" className="border-b border-danger/40 bg-danger/5">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm sm:px-6">
+    <div role="alert" className="mx-[var(--inset)] mt-2">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 rounded-[var(--radius-card)] border border-oxblood/30 bg-oxblood-tint px-5 py-3 text-[14px] text-oxblood">
         <p>
           Freighter is set to <b className="font-mono">{short(pair.wallet)}</b>, but you&apos;re signed in here as{" "}
           <b className="font-mono">{short(pair.session)}</b>. Actions on this site use the signed-in account.
@@ -43,7 +43,7 @@ export default function AccountMismatch() {
             setBusy(true); setError(undefined);
             try { await signIn(); window.location.reload(); } catch (e) { setError((e as Error).message); setBusy(false); }
           }}
-          className="rounded-full bg-danger px-4 py-1.5 font-medium text-paper hover:opacity-90 disabled:opacity-60"
+          className="rounded-full bg-oxblood px-4 py-2 font-medium text-white hover:brightness-110 disabled:opacity-60"
         >
           {busy ? "Check Freighter…" : `Switch to ${short(pair.wallet)}`}
         </button>
