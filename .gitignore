@@ -43,3 +43,7 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# downloaded inheritance packets & local demo accounts
+riktha-packet-*.json
+*.local.json
