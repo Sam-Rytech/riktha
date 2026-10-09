@@ -1,0 +1,145 @@
+{
+  "generatedAt": "2026-10-09T08:20:53.352Z",
+  "startedAt": "2026-10-09T08:17:10.894Z",
+  "network": "testnet",
+  "windows": {
+    "inactivitySeconds": 60,
+    "graceSeconds": 60
+  },
+  "accounts": {
+    "ownerA": "GAIVNYV3ZJSWWS3LR2UGSBZAXMZSEWOJ6CVUMYQXCJZNSNKTBWH4DAWD",
+    "heirA": "GCIK6FA35MJYX637Y6TDWHV2YWNTPLOQOKHJMANM2YVR5YKA32C7DFF5",
+    "ownerB": "GD7ID226HB4EEJBAGGTAGHWAIQRWVWA6ABQEMBV52TUFKRX36YSAMM7J",
+    "heirB": "GDR3GWN3YNYBWLRG3S3HBJR4GTCTZP6U52BKQ3HM4RURKTP6TWKQITOQ",
+    "keeper": "GBEQRGJLJ7CICNAME7LEEY7OMRKASQVX3O26SAB6AZIUM6DFPJ6FNTZY",
+    "assetIssuer": "GBOKEJLGORZLWYM6R5IL6C7MM2DNJUOPFKNOPPKNNAAPFDWJE6IZDJDO"
+  },
+  "passed": 10,
+  "total": 10,
+  "scenarios": [
+    {
+      "id": 1,
+      "title": "Setup registers two pre-authorized transactions",
+      "expected": "Success; 2 preauth_tx signers with expected hashes; sequence_time updated",
+      "passed": true,
+      "observed": "2 pre-auth signers, hashes match: true; sequence_time 1791533837 → 1791533852",
+      "txHashes": [
+        "6e2d234afa6fb3e69763d057550f0f26ca20c251031d01ec8f045c3271c9bce0"
+      ],
+      "at": "2026-10-09T08:17:35.867Z"
+    },
+    {
+      "id": 2,
+      "title": "Phase 1 submitted early is rejected harmlessly",
+      "expected": "Rejected: tx_bad_minseq_age_or_gap; pre-auth signer still present",
+      "passed": true,
+      "observed": "{\"transaction\":\"tx_fee_bump_inner_failed\",\"inner_transaction\":\"tx_bad_minseq_age_or_gap\"}; signers intact: true",
+      "txHashes": [],
+      "resultCodes": {
+        "transaction": "tx_fee_bump_inner_failed",
+        "inner_transaction": "tx_bad_minseq_age_or_gap"
+      },
+      "at": "2026-10-09T08:17:37.831Z"
+    },
+    {
+      "id": 3,
+      "title": "An owner check-in resets the clock",
+      "expected": "Phase 1 still rejected at the original deadline",
+      "passed": true,
+      "observed": "check-in ok; Phase 1 at original deadline: tx_bad_minseq_age_or_gap",
+      "txHashes": [
+        "a5ef532c3283b193a596328144c4ed17bed45ff733e2edea9e5c9089491d2c36"
+      ],
+      "resultCodes": {
+        "transaction": "tx_fee_bump_inner_failed",
+        "inner_transaction": "tx_bad_minseq_age_or_gap"
+      },
+      "at": "2026-10-09T08:18:40.699Z"
+    },
+    {
+      "id": 4,
+      "title": "Phase 1 after the inactivity window",
+      "expected": "Success; account sequence == s1",
+      "passed": true,
+      "observed": "accepted; seq 21913091647916546 vs s1 21913091647916546",
+      "txHashes": [
+        "10eb62591d616a81cab99b89e3b11a1b0fd4bc6a1919cfa2a8b96f565c038db1"
+      ],
+      "at": "2026-10-09T08:19:28.438Z"
+    },
+    {
+      "id": 5,
+      "title": "Phase 2 submitted early is rejected",
+      "expected": "Rejected: tx_bad_minseq_age_or_gap",
+      "passed": true,
+      "observed": "{\"transaction\":\"tx_fee_bump_inner_failed\",\"inner_transaction\":\"tx_bad_minseq_age_or_gap\"}",
+      "txHashes": [],
+      "resultCodes": {
+        "transaction": "tx_fee_bump_inner_failed",
+        "inner_transaction": "tx_bad_minseq_age_or_gap"
+      },
+      "at": "2026-10-09T08:19:29.441Z"
+    },
+    {
+      "id": 6,
+      "title": "Owner cancels during the grace window",
+      "expected": "Owner tx succeeds; Phase 2 then rejected with tx_bad_seq forever",
+      "passed": true,
+      "observed": "Phase 1 ok; cancel ok; Phase 2 after grace: tx_bad_seq",
+      "txHashes": [
+        "40a9945960f9a837a33543a1de2608f7a79186be7dbeddc75da00444d4bbefce",
+        "b089e79be6be19bb718b0fbb4bc729dfeb98b44f512c03f4e15d498946a9c13a"
+      ],
+      "resultCodes": {
+        "transaction": "tx_fee_bump_inner_failed",
+        "inner_transaction": "tx_bad_seq"
+      },
+      "at": "2026-10-09T08:19:47.718Z"
+    },
+    {
+      "id": 7,
+      "title": "Re-arm after a cancelled claim",
+      "expected": "Stale signers removed, new pair present",
+      "passed": true,
+      "observed": "2 pre-auth signers; new pair present: true; stale removed: true",
+      "txHashes": [
+        "25f51c94173fd044e1df002dcbd0183301cd4d3b59baf1d02801ea117a44e891"
+      ],
+      "at": "2026-10-09T08:19:53.972Z"
+    },
+    {
+      "id": 8,
+      "title": "Full path: Phase 1 → grace → Phase 2",
+      "expected": "Heir is a signer with weight W",
+      "passed": true,
+      "observed": "accepted; heir weight 1",
+      "txHashes": [
+        "e1705d6c97420f0734a6e2cf602185f4948b54c31cad008052b9987b1bf5535b"
+      ],
+      "at": "2026-10-09T08:20:39.043Z"
+    },
+    {
+      "id": 9,
+      "title": "Heir moves XLM and a test asset out of the owner's account",
+      "expected": "Payments succeed with the heir's signature only",
+      "passed": true,
+      "observed": "XLM moved; RIK moved (trustline added); heir RIK balance 250.0000000",
+      "txHashes": [
+        "1328c6c27a9c40726beeecad815667b1424eaf759a24090aca4d141203dbf255",
+        "2aaeb6627377fc66fbec914d14abb6e1f690c4f2b8c09199500b8e1ad381f197"
+      ],
+      "at": "2026-10-09T08:20:53.352Z"
+    },
+    {
+      "id": 10,
+      "title": "Revoke",
+      "expected": "No Riktha signers left",
+      "passed": true,
+      "observed": "ok; 0 pre-auth signers left",
+      "txHashes": [
+        "a3adc95bb2929ee16a6dc789db474e7acf80d4516626adb0757a6027e8e44dda"
+      ],
+      "at": "2026-10-09T08:19:59.760Z"
+    }
+  ]
+}

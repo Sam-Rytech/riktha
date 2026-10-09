@@ -43,3 +43,13 @@ body {
   background: var(--paper);
   color: var(--ink);
 }
+
+/* Visible keyboard focus everywhere (PRD §9 accessibility). */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+}

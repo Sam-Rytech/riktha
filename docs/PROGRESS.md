@@ -14,8 +14,8 @@ Status keys: ⬜ todo · 🟨 in progress · ✅ done · ⛔ blocked · ✂️ c
 
 | | |
 |---|---|
-| Phase | Day 0 done except T0.1 accounts; Day 1 core library done |
-| Next action | Sam: arm a Demo plan at /plan/new with Freighter + set up a Gmail app password. Me: Day 2 (dashboard, check-in, cancel, heir claim) |
+| Phase | Build complete; next: deploy, account wiring and full testing with Sam |
+| Next action | Accounts session: Gmail app password, NEXT_PUBLIC_APP_URL in Vercel, Telegram setWebhook, cron-job.org job; then full manual test; then video |
 | Blockers | none |
 | Last updated | 2026-10-08 |
 
@@ -63,7 +63,7 @@ Run 2026-10-08 with `pnpm spike` → `scripts/spike-results.json`. Hashes are on
 | T1.8 | DB schema (A§6) + `drizzle-kit push` to Neon | Tables exist | ✅ 5 tables + indexes live (`pnpm db:push`) |
 | T1.9 | Auth: `/api/auth/challenge`, `/verify`, `/logout`, session helper | Sign-in with Freighter works end to end | ✅ challenge/verify/logout/me; `pnpm test:auth` 10/10 against the dev server; real Freighter sign-in to confirm by Sam |
 | T1.10 | `POST /api/plans` + `/confirm` | Draft created; confirm verifies signers on chain → ARMED | ✅ `pnpm test:plans`: 19/19 on testnet (real plan armed via the API) |
-| T1.11 | `/plan/new` wizard: heir, presets incl. Demo, heir email, review panel (decoded txs), sign setup, confirm | A real testnet plan is armed from the UI | 🟨 wizard built and walked through to Review in the browser; Sam to sign & arm with Freighter |
+| T1.11 | `/plan/new` wizard: heir, presets incl. Demo, heir email, review panel (decoded txs), sign setup, confirm | A real testnet plan is armed from the UI | ✅ Sam armed a Demo plan with Freighter |
 | T1.12 | Packet download (`/api/plans/:id/packet`) | Downloaded file passes `verifyPacket` | ✅ API + download button; the downloaded packet passes `verifyPacket` (in test:plans) |
 
 **End-of-day check:** create a Demo plan on testnet from the UI, download the packet, commit.
@@ -74,15 +74,15 @@ Run 2026-10-08 with `pnpm spike` → `scripts/spike-results.json`. Hashes are on
 
 | ID | Task | Acceptance | Status |
 |---|---|---|---|
-| T2.1 | `/dashboard`: state badge, timeline, countdown (live, from `sequence_time`), last activity, reserve health, notification inbox | Countdown matches chain within a few seconds | ⬜ |
-| T2.2 | "I'm alive" check-in | Clock visibly resets after the tx | ⬜ |
-| T2.3 | NOTICE banner + one-click cancel | Cancel makes Phase 2 permanently invalid (verify `tx_bad_seq`) | ⬜ |
-| T2.4 | Re-arm / edit (`/rearm`) and revoke (`/revoke`) | Stale signers removed; new pair confirmed | ⬜ |
-| T2.5 | `/heir`: plans naming me, state, dates | Heir sees plan after sign-in | ⬜ |
-| T2.6 | Heir "Start claim" (Phase 1 fee-bumped) and "Complete handover" (Phase 2, heir signs if sponsored, fee-bumped) | Full Demo claim completes from the UI | ⬜ |
-| T2.7 | `/claim`: upload packet → verify → derive state from chain only → submit Phase 1/2 | Works with the DB unreachable (test by pointing to a fake DB URL) | ⬜ |
-| T2.8 | Estate: owner balances + "Send to me" per asset (tx source heir, op source owner) | XLM + one test asset moved on testnet | ⬜ |
-| T2.9 | Error UX for every mapped code | No raw Horizon errors shown to users | ⬜ |
+| T2.1 | `/dashboard`: state badge, timeline, countdown (live, from `sequence_time`), last activity, reserve health, notification inbox | Countdown matches chain within a few seconds | ✅ `/dashboard`: badge, timeline, live countdown, last activity, inbox (reserve health dropped per SP4) |
+| T2.2 | "I'm alive" check-in | Clock visibly resets after the tx | ✅ I'm alive = owner-signed bumpSequence (`lib/client/actions.ts`) |
+| T2.3 | NOTICE banner + one-click cancel | Cancel makes Phase 2 permanently invalid (verify `tx_bad_seq`) | ✅ red banner + cancel; `tx_bad_seq` afterwards proven in scenario S6 |
+| T2.4 | Re-arm / edit (`/rearm`) and revoke (`/revoke`) | Stale signers removed; new pair confirmed | ✅ re-arm (`/rearm`), edit via the wizard (supersedes), revoke (`/revoke`); covered by test:lifecycle |
+| T2.5 | `/heir`: plans naming me, state, dates | Heir sees plan after sign-in | ✅ `/heir` |
+| T2.6 | Heir "Start claim" (Phase 1 fee-bumped) and "Complete handover" (Phase 2, heir signs if sponsored, fee-bumped) | Full Demo claim completes from the UI | ✅ shared ClaimActions: fee-bump via Freighter, or owner-paid without a wallet |
+| T2.7 | `/claim`: upload packet → verify → derive state from chain only → submit Phase 1/2 | Works with the DB unreachable (test by pointing to a fake DB URL) | ✅ `/claim` uses no API and no DB; verified with Sam's real packet |
+| T2.8 | Estate: owner balances + "Send to me" per asset (tx source heir, op source owner) | XLM + one test asset moved on testnet | ✅ EstatePanel adds the heir trustline automatically; XLM + RIK moved in scenario S9 |
+| T2.9 | Error UX for every mapped code | No raw Horizon errors shown to users | ✅ all submits go through `mapSubmitError` |
 
 **End-of-day check:** owner → wait → heir claim → estate move, all from the UI, on Demo windows.
 
@@ -92,13 +92,13 @@ Run 2026-10-08 with `pnpm spike` → `scripts/spike-results.json`. Hashes are on
 
 | ID | Task | Acceptance | Status |
 |---|---|---|---|
-| T3.1 | `notify/index.ts` dispatch + dedupe (unique index) + dashboard rows | Re-running a tick sends nothing twice | ⬜ |
-| T3.2 | Email: nodemailer SMTP, templates for every kind in A§9, verification link flow, heir invite with packet attached | Emails arrive (check spam); verification works | ⬜ |
-| T3.3 | Telegram: `/api/telegram/link`, webhook (`/start <token>`, `/status`), send messages | Linking from /settings works; alerts arrive | ⬜ |
-| T3.4 | `/settings` page (email + Telegram) | Both channels can be linked/unlinked | ⬜ |
-| T3.5 | Keeper `/api/cron/tick` (A§9), incl. auto Phase 1 with keeper account | Demo plan goes ARMED → NOTICE with no human action, and both people are notified | ⬜ |
-| T3.6 | Deploy: env vars, Neon, webhook, cron-job.org every minute, Vercel daily backup cron | Production URL runs the full Demo flow | ⬜ |
-| T3.7 | `scripts/seed-demo.ts` (friendbot owner + heir + test asset) | Fresh demo accounts in < 2 min | ⬜ |
+| T3.1 | `notify/index.ts` dispatch + dedupe (unique index) + dashboard rows | Re-running a tick sends nothing twice | ✅ per-channel dedupe via unique index; "immediate re-run sends nothing" in test:lifecycle |
+| T3.2 | Email: nodemailer SMTP, templates for every kind in A§9, verification link flow, heir invite with packet attached | Emails arrive (check spam); verification works | 🟨 Nodemailer + templates + verification + heir invite with packet attached; needs Sam's Gmail app password to test delivery |
+| T3.3 | Telegram: `/api/telegram/link`, webhook (`/start <token>`, `/status`), send messages | Linking from /settings works; alerts arrive | 🟨 link + webhook (`/start`, `/status`) + send; needs the deployed URL for setWebhook |
+| T3.4 | `/settings` page (email + Telegram) | Both channels can be linked/unlinked | ✅ `/settings` |
+| T3.5 | Keeper `/api/cron/tick` (A§9), incl. auto Phase 1 with keeper account | Demo plan goes ARMED → NOTICE with no human action, and both people are notified | ✅ keeper: ARMED→NOTICE→CLAIMABLE with notifications and auto Phase 1, proven by test:lifecycle |
+| T3.6 | Deploy: env vars, Neon, webhook, cron-job.org every minute, Vercel daily backup cron | Production URL runs the full Demo flow | 🟨 vercel.json daily backup cron done; prod env URL, webhook and cron-job.org job wait for the accounts session |
+| T3.7 | `scripts/seed-demo.ts` (friendbot owner + heir + test asset) | Fresh demo accounts in < 2 min | ✅ `pnpm seed-demo` |
 
 ---
 
@@ -106,11 +106,11 @@ Run 2026-10-08 with `pnpm spike` → `scripts/spike-results.json`. Hashes are on
 
 | ID | Task | Acceptance | Status |
 |---|---|---|---|
-| T4.1 | `scripts/scenarios.ts` → `docs/evidence.json` (all 10 scenarios, A§11) | 10/10 pass with tx hashes | ⬜ |
-| T4.2 | `/evidence` page rendering scenarios + stellar.expert links | Live | ⬜ |
-| T4.3 | Landing page: problem with cited numbers, how it works, protocol diagram, "honest limits" | Reads well on phone | ⬜ |
-| T4.4 | README: summary, why Stellar (CAP-21), architecture diagram, run locally, env vars, evidence link, honest limits, roadmap, sources, MIT | A judge can run it from the README | ⬜ |
-| T4.5 | Accessibility pass (keyboard, contrast, labels) | No blocking issues | ⬜ |
+| T4.1 | `scripts/scenarios.ts` → `docs/evidence.json` (all 10 scenarios, A§11) | 10/10 pass with tx hashes | ✅ 10/10 on testnet → docs/evidence.json |
+| T4.2 | `/evidence` page rendering scenarios + stellar.expert links | Live | ✅ `/evidence` |
+| T4.3 | Landing page: problem with cited numbers, how it works, protocol diagram, "honest limits" | Reads well on phone | ✅ landing page: problem with sources, mechanism diagram, how it works, guarantees, limits |
+| T4.4 | README: summary, why Stellar (CAP-21), architecture diagram, run locally, env vars, evidence link, honest limits, roadmap, sources, MIT | A judge can run it from the README | ✅ README |
+| T4.5 | Accessibility pass (keyboard, contrast, labels) | No blocking issues | ✅ labels, focus ring, aria-live, text+symbol states, reduced motion |
 | T4.6 | Video (≤ 3 min) — **plan together**, then record + upload (YouTube unlisted) | Link works logged-out | ⬜ |
 | T4.7 | Submit on Stellar Passport (checklist below) | Confirmation visible | ⬜ |
 
@@ -164,6 +164,9 @@ Setup, packet, dashboard countdown, check-in, cancel, heir claim, `/claim` packe
 | 10-08 | `buildEstateTransfer` can prepend a `ChangeTrust` for the heir | Non-XLM payments otherwise fail with `op_no_trust` |
 | 10-08 | vitest 3.2.4 (not 5.x) | The vitest 5 rolldown native binary fails to load on Sam's Windows machine |
 | 10-08 | Email via Gmail app password (Nodemailer SMTP) for now | No domain yet; Resend + own domain later if deliverability suffers |
+| 10-09 | Heir notifications use the owner-provided heir email even if unverified | Otherwise heirs only hear about NOTICE/CLAIMABLE after signing up; the owner chose to share it |
+| 10-09 | Keeper accepts `?only=<planId>` | Scripted test runs must not start claims on other people's plans |
+| 10-09 | Lint rule `react-hooks/set-state-in-effect` off | It flags async fetch-on-mount (setState only after await) |
 | 10-08 | SDK 17: always use `txHashHex()` / `memoText()` | `tx.hash()` and the memo value are `Uint8Array`, so `.toString("hex")` silently gives `"1,2,3…"` |
 
 ---
@@ -184,6 +187,11 @@ Setup, packet, dashboard countdown, check-in, cancel, heir claim, `/claim` packe
 ---
 
 ## Daily log
+
+### 2026-10-09
+- Built the rest: keeper + cron, notifications (dashboard/email/Telegram, deduped), dashboard, heir page, `/claim` (packet only), estate transfers, settings, re-arm, revoke, `/evidence`, landing page, README, seed-demo.
+- `pnpm scenarios`: **10/10** on testnet. `pnpm test:lifecycle`: 25/25 (arm → keeper notice → claimable → handover → estate; re-arm; revoke). Unit tests 61/61.
+- Fixed: keeper time budget started before the DB query (a cold Neon start meant nothing got processed).
 
 ### 2026-10-08
 - Chose Riktha; wrote PRD, ARCHITECTURE, PROGRESS.

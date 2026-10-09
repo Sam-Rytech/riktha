@@ -34,7 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <div className="flex flex-1 flex-col">{children}</div>
         <footer className="border-t border-line">
           <div className="mx-auto flex max-w-5xl flex-wrap justify-between gap-3 px-4 py-6 text-sm text-muted sm:px-6">
-            <p>Riktha · Stellar testnet · unaudited · not a legal will</p>
+            <p>Riktha runs on Stellar testnet. It is unaudited and is not a legal will.</p>
             <nav aria-label="Footer" className="flex gap-4">
               <Link href="/evidence" className="underline-offset-4 hover:underline">Evidence</Link>
               <a href="https://github.com/Sam-Rytech/riktha" className="underline-offset-4 hover:underline">Source</a>

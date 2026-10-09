@@ -198,7 +198,7 @@ export default function NewPlan() {
         <div className="space-y-6">
           <h1 ref={headingRef} tabIndex={-1} className="font-serif text-3xl outline-none">Your plan is armed</h1>
           <div className="rounded-xl border border-accent bg-surface p-5">
-            <p className="text-sm uppercase tracking-[0.15em] text-accent">Armed</p>
+            <p className="font-medium text-accent">✓ Armed on the Stellar network</p>
             <p className="mt-2">
               If you send nothing until <b>{result.eligibleAt ? new Date(result.eligibleAt * 1000).toLocaleString() : "the window ends"}</b>, a claim can start.
               Using your account normally pushes this date back.

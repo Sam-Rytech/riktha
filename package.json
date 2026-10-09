@@ -15,7 +15,10 @@
     "gen-secrets": "node scripts/gen-secrets.mjs",
     "push-env": "node scripts/push-env.mjs",
     "test:auth": "tsx scripts/e2e-auth.mts",
-    "test:plans": "tsx scripts/e2e-plans.mts"
+    "test:plans": "tsx scripts/e2e-plans.mts",
+    "test:lifecycle": "tsx scripts/e2e-lifecycle.mts",
+    "scenarios": "tsx scripts/scenarios.ts",
+    "seed-demo": "tsx scripts/seed-demo.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.0",

@@ -1,6 +1,6 @@
 import "server-only";
 import { Keypair } from "@stellar/stellar-sdk";
-import { and, asc, eq, isNull, notInArray } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, notInArray } from "drizzle-orm";
 import { parseTx, wrapFeeBump } from "@/lib/core/builders";
 import type { NetworkName } from "@/lib/core/config";
 import { dueNotifications, TRANSITION_EVENT } from "@/lib/core/notifications";
@@ -12,7 +12,7 @@ import { toRef } from "./plans";
 
 const { plans, planEvents } = schema;
 const BATCH = 50;
-const BUDGET_MS = 8_000;
+const BUDGET_MS = 20_000; // well inside the route's 30 s maxDuration
 
 export interface TickResult { processed: number; transitions: number; notified: number; submitted: number; errors: number }
 
@@ -22,14 +22,17 @@ function keeperKeypair(): Keypair | null {
 }
 
 /** A§9. Idempotent: notifications are deduplicated in the DB, Phase 1 can only succeed once. */
-export async function tick(now = Math.floor(Date.now() / 1000)): Promise<TickResult> {
-  const started = Date.now();
+export async function tick(opts: { only?: string[] } = {}, now = Math.floor(Date.now() / 1000)): Promise<TickResult> {
   const r: TickResult = { processed: 0, transitions: 0, notified: 0, submitted: 0, errors: 0 };
   const rows = await db().select().from(plans)
-    .where(and(isNull(plans.supersededBy), notInArray(plans.status, ["DRAFT", "INHERITED", "REVOKED"])))
+    .where(and(
+      isNull(plans.supersededBy), notInArray(plans.status, ["DRAFT", "INHERITED", "REVOKED"]),
+      opts.only?.length ? inArray(plans.id, opts.only) : undefined,
+    ))
     .orderBy(asc(plans.updatedAt)).limit(BATCH);
   const reserves = new Map<NetworkName, bigint>();
   const keeper = keeperKeypair();
+  const started = Date.now(); // after the query: a cold database can take seconds to answer
 
   for (const plan of rows) {
     if (Date.now() - started > BUDGET_MS) break; // the next tick continues with the oldest rows
@@ -40,12 +43,10 @@ export async function tick(now = Math.floor(Date.now() / 1000)): Promise<TickRes
       if (!account) continue;
       const st = derivePlanState(account, toRef(plan), now, reserves.get(network)!);
 
-      if (st.state !== plan.status) {
-        const event = TRANSITION_EVENT[st.state as PlanState];
-        if (event) {
-          const txHash = event === "PHASE1" ? plan.phase1Hash : event === "PHASE2" ? plan.phase2Hash : null;
-          await db().insert(planEvents).values({ planId: plan.id, type: event, txHash });
-        }
+      const event = st.state !== plan.status ? TRANSITION_EVENT[st.state as PlanState] : undefined;
+      if (event) {
+        const txHash = event === "PHASE1" ? plan.phase1Hash : event === "PHASE2" ? plan.phase2Hash : null;
+        await db().insert(planEvents).values({ planId: plan.id, type: event, txHash });
         r.transitions++;
       }
       r.notified += await dispatchAll(plan, dueNotifications(plan.status, st, toRef(plan), now), { eligibleAt: st.eligibleAt, claimableAt: st.claimableAt });
