@@ -192,6 +192,9 @@ Setup, packet, dashboard countdown, check-in, cancel, heir claim, `/claim` packe
 - Built the rest: keeper + cron, notifications (dashboard/email/Telegram, deduped), dashboard, heir page, `/claim` (packet only), estate transfers, settings, re-arm, revoke, `/evidence`, landing page, README, seed-demo.
 - `pnpm scenarios`: **10/10** on testnet. `pnpm test:lifecycle`: 25/25 (arm → keeper notice → claimable → handover → estate; re-arm; revoke). Unit tests 61/61.
 - Fixed: keeper time budget started before the DB query (a cold Neon start meant nothing got processed).
+- Accounts wired: Gmail SMTP, NEXT_PUBLIC_APP_URL, Telegram webhook + /status, cron-job.org every minute (test run 200). Live cancel → CANCELLED alert on all 3 channels. Gmail mail lands in spam (no own domain); content tweaked.
+- Manual test passed end to end. Found: the session cookie outlives a Freighter account switch (Sam's plan went on the wrong account). Added a site-wide account-mismatch banner, and the wizard now names the account being protected.
+- Decided: build the **heir claim kit** (heir named by email; key locked with a claim code in the owner's browser), then testnet anchor **cash-out** if time allows.
 
 ### 2026-10-08
 - Chose Riktha; wrote PRD, ARCHITECTURE, PROGRESS.

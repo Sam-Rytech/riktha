@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, IBM_Plex_Mono, Inter } from "next/font/google";
 import Link from "next/link";
+import AccountMismatch from "@/components/AccountMismatch";
 import ConnectButton from "@/components/ConnectButton";
 import "./globals.css";
 
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <ConnectButton />
           </div>
         </header>
+        <AccountMismatch />
         <div className="flex flex-1 flex-col">{children}</div>
         <footer className="border-t border-line">
           <div className="mx-auto flex max-w-5xl flex-wrap justify-between gap-3 px-4 py-6 text-sm text-muted sm:px-6">

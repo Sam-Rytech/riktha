@@ -115,6 +115,7 @@ export default function NewPlan() {
       {step === "heir" && (
         <form onSubmit={(e) => { e.preventDefault(); if (heirValid) setStep("timing"); }} className="space-y-6">
           <h1 ref={headingRef} tabIndex={-1} className="font-serif text-3xl outline-none">Who should inherit this account?</h1>
+          <p className="rounded-lg border border-line bg-surface px-3 py-2 text-sm">You&apos;re creating a plan for <b className="font-mono" title={me}>{me.slice(0, 4)}…{me.slice(-4)}</b>, the account you&apos;re signed in with.</p>
           <p className="text-muted">Your heir needs their own funded Stellar account. Before the handover they have no power over yours, and their address stays off the public ledger.</p>
           <label className="block">
             <span className="text-sm font-medium">Heir&apos;s Stellar address</span>
