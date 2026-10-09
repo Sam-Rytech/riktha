@@ -15,7 +15,7 @@ Status keys: ⬜ todo · 🟨 in progress · ✅ done · ⛔ blocked · ✂️ c
 | | |
 |---|---|
 | Phase | Build complete; next: deploy, account wiring and full testing with Sam |
-| Next action | Sam tests the claim kit live; then plan + record the video; then submit |
+| Next action | Sam reviews the redesign on production + tests the claim kit; then plan + record the video; then submit |
 | Blockers | none |
 | Last updated | 2026-10-08 |
 
@@ -188,6 +188,12 @@ Setup, packet, dashboard countdown, check-in, cancel, heir claim, `/claim` packe
 ---
 
 ## Daily log
+
+### 2026-10-09 (evening): front-end redesign
+- Analysed tenderr.xyz, naust.namite.xyz and shamar.namite.xyz at 1440 / 768 / 375 px.
+- Blend chosen with Sam: Naust's framed hero, Tender's light→dark rhythm, Shamar's rounded slabs, and an embedded live preview. Light-led, deep green, tight grotesk (Instrument Sans + Instrument Serif accent + Geist Mono). Motion via motion.dev.
+- Landing rebuilt: animated ProtocolScene hero, statement, pinned scroll story, interactive owner/heir preview, claim-kit sequence, dark protocol half (traced cards, evidence counter, tx marquee), FAQ, final CTA. All app screens restyled.
+- Next.js 16 strictness fixed: clock reads moved into effects; header behind Suspense.
 
 ### 2026-10-09
 - Built the rest: keeper + cron, notifications (dashboard/email/Telegram, deduped), dashboard, heir page, `/claim` (packet only), estate transfers, settings, re-arm, revoke, `/evidence`, landing page, README, seed-demo.
