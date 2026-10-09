@@ -25,10 +25,10 @@ Status keys: ⬜ todo · 🟨 in progress · ✅ done · ⛔ blocked · ✂️ c
 
 | ID | Task | Acceptance | Status |
 |---|---|---|---|
-| T0.1 | Create accounts: GitHub repo `riktha` (public, MIT), Vercel project, Neon DB via Vercel Marketplace, Telegram bot via @BotFather (pick username), Gmail app password (or other SMTP), cron-job.org account | All credentials in a local `.env.local` (never committed) | 🟨 GitHub (private), Vercel (linked), Neon, @RikthaBot, cron-job.org signup, secrets in `.env.local` ✅ · email provider + Vercel env vars pending |
+| T0.1 | Create accounts: GitHub repo `riktha` (public, MIT), Vercel project, Neon DB via Vercel Marketplace, Telegram bot via @BotFather (pick username), Gmail app password (or other SMTP), cron-job.org account | All credentials in a local `.env.local` (never committed) | ✅ GitHub (private until submission), Vercel, Neon, @RikthaBot, Gmail SMTP, cron-job.org |
 | T0.2 | Run spike (A Appendix A) on testnet | Every SP1–SP7 row below filled in | ✅ all 7 passed |
 | T0.3 | Decide variant + SEQ_JUMP from spike | Decision log updated; A§2.2 updated | ✅ |
-| T0.4 | Scaffold: Next.js + TS + Tailwind + pnpm, add `@stellar/stellar-sdk`, `@stellar/freighter-api`, `drizzle-orm`, `@neondatabase/serverless`, `drizzle-kit`, `zod`, `jose`, `nodemailer`, `vitest`, `tsx`; copy docs into `docs/` | `pnpm dev` runs; first commit pushed; Vercel deploys the blank app | 🟨 scaffolded, builds, tests pass; push + Vercel wait for T0.1 |
+| T0.4 | Scaffold: Next.js + TS + Tailwind + pnpm, add `@stellar/stellar-sdk`, `@stellar/freighter-api`, `drizzle-orm`, `@neondatabase/serverless`, `drizzle-kit`, `zod`, `jose`, `nodemailer`, `vitest`, `tsx`; copy docs into `docs/` | `pnpm dev` runs; first commit pushed; Vercel deploys the blank app | ✅ |
 
 ### Spike results
 
@@ -93,11 +93,11 @@ Run 2026-10-08 with `pnpm spike` → `scripts/spike-results.json`. Hashes are on
 | ID | Task | Acceptance | Status |
 |---|---|---|---|
 | T3.1 | `notify/index.ts` dispatch + dedupe (unique index) + dashboard rows | Re-running a tick sends nothing twice | ✅ per-channel dedupe via unique index; "immediate re-run sends nothing" in test:lifecycle |
-| T3.2 | Email: nodemailer SMTP, templates for every kind in A§9, verification link flow, heir invite with packet attached | Emails arrive (check spam); verification works | 🟨 Nodemailer + templates + verification + heir invite with packet attached; needs Sam's Gmail app password to test delivery |
-| T3.3 | Telegram: `/api/telegram/link`, webhook (`/start <token>`, `/status`), send messages | Linking from /settings works; alerts arrive | 🟨 link + webhook (`/start`, `/status`) + send; needs the deployed URL for setWebhook |
+| T3.2 | Email: nodemailer SMTP, templates for every kind in A§9, verification link flow, heir invite with packet attached | Emails arrive (check spam); verification works | ✅ verified on production (confirmation + alerts delivered; lands in spam without our own domain) |
+| T3.3 | Telegram: `/api/telegram/link`, webhook (`/start <token>`, `/status`), send messages | Linking from /settings works; alerts arrive | ✅ webhook set, linking and alerts verified on production |
 | T3.4 | `/settings` page (email + Telegram) | Both channels can be linked/unlinked | ✅ `/settings` |
 | T3.5 | Keeper `/api/cron/tick` (A§9), incl. auto Phase 1 with keeper account | Demo plan goes ARMED → NOTICE with no human action, and both people are notified | ✅ keeper: ARMED→NOTICE→CLAIMABLE with notifications and auto Phase 1, proven by test:lifecycle |
-| T3.6 | Deploy: env vars, Neon, webhook, cron-job.org every minute, Vercel daily backup cron | Production URL runs the full Demo flow | 🟨 vercel.json daily backup cron done; prod env URL, webhook and cron-job.org job wait for the accounts session |
+| T3.6 | Deploy: env vars, Neon, webhook, cron-job.org every minute, Vercel daily backup cron | Production URL runs the full Demo flow | ✅ production on riktha.vercel.app; cron-job.org every minute; Telegram webhook; env complete |
 | T3.7 | `scripts/seed-demo.ts` (friendbot owner + heir + test asset) | Fresh demo accounts in < 2 min | ✅ `pnpm seed-demo` |
 
 ---
