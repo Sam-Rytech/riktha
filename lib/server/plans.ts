@@ -1,15 +1,17 @@
 import "server-only";
 import { and, desc, eq, gte, isNull, ne, sql } from "drizzle-orm";
-import { buildPlan, parseTx, txHashHex, Variant } from "@/lib/core/builders";
+import { buildPlan, buildRevoke, parseTx, preauthSignerKey, txHashHex, Variant } from "@/lib/core/builders";
 import { NetworkName } from "@/lib/core/config";
 import { checkHeirAccount, checkOwnerAccount, checkWindows } from "@/lib/core/eligibility";
 import { explainTx } from "@/lib/core/explain";
-import { makePacket } from "@/lib/core/packet";
+import { dueNotifications } from "@/lib/core/notifications";
 import { derivePlanState, PlanOnChainRef } from "@/lib/core/state";
-import { baseReserveStroops, loadAccountRaw } from "@/lib/stellar/horizon";
+import { baseReserveStroops, loadAccountRaw, loadTransaction } from "@/lib/stellar/horizon";
 import type { Session } from "./auth";
 import { db, schema } from "./db";
 import type { Plan } from "./db/schema";
+import { dispatchAll } from "./notify";
+import { packetFromRow } from "./packet";
 
 const { plans, planEvents } = schema;
 const DEFAULT_VARIANT: Variant = "plain"; // spike SP4
@@ -46,11 +48,14 @@ async function knownHashes(owner: string, network: NetworkName): Promise<string[
 export interface DraftInput { heir: string; inactivitySeconds: number; graceSeconds: number; heirEmail?: string | null }
 
 /** Validates everything against the chain, builds the 3 transactions and stores a DRAFT. */
-export async function createDraft(s: Session, input: DraftInput, previous?: Plan) {
+export async function createDraft(s: Session, input: DraftInput) {
   const [{ n }] = await db().select({ n: sql<number>`count(*)::int` }).from(plans)
     .where(and(eq(plans.ownerAddress, s.address), gte(plans.createdAt, sql`now() - interval '1 hour'`)));
   if (n >= PLAN_CREATES_PER_HOUR) throw new PlanError("Too many plans created in the last hour. Try again later.", 429);
 
+  const [previous] = await db().select({ version: plans.version }).from(plans)
+    .where(and(eq(plans.ownerAddress, s.address), eq(plans.network, s.network), ne(plans.status, "DRAFT")))
+    .orderBy(desc(plans.version)).limit(1);
   const [owner, heir, reserve, known] = await Promise.all([
     loadAccountRaw(s.network, s.address), loadAccountRaw(s.network, input.heir),
     baseReserveStroops(s.network), knownHashes(s.address, s.network),
@@ -105,6 +110,8 @@ export async function confirmSetup(s: Session, id: string, txHash: string) {
   await db().update(plans).set({ supersededBy: plan.id, updatedAt: new Date() }).where(supersedable);
   await db().update(plans).set({ status: st.state, setupTxHash: expected, lastSeqTime: st.seqTime, updatedAt: new Date() }).where(eq(plans.id, plan.id));
   await db().insert(planEvents).values({ planId: plan.id, type: previous.length ? "REARMED" : "ARMED", txHash: expected });
+  const armed = { ...plan, status: st.state, setupTxHash: expected, lastSeqTime: st.seqTime };
+  await dispatchAll(armed, dueNotifications("DRAFT", st, toRef(plan), st.seqTime), { eligibleAt: st.eligibleAt });
   return { state: st.state, eligibleAt: st.eligibleAt };
 }
 
@@ -118,7 +125,10 @@ export async function planWithState(plan: Plan, role: "owner" | "heir") {
     heirEmail: role === "owner" ? plan.heirEmail : undefined,
     variant: plan.variant, inactivitySeconds: plan.inactivitySecs, graceSeconds: plan.graceSecs,
     version: plan.version, createdAt: plan.createdAt, setupTxHash: plan.setupTxHash,
-    phase1Seq: plan.phase1Seq, state,
+    phase1Seq: plan.phase1Seq, phase1Hash: plan.phase1Hash, phase2Hash: plan.phase2Hash,
+    // Both phases are already in the packet the heir holds, so exposing them adds nothing secret.
+    phase1Xdr: plan.phase1Xdr, phase2Xdr: plan.phase2Xdr,
+    state,
     seqTime: derived?.seqTime, eligibleAt: derived?.eligibleAt, claimableAt: derived?.claimableAt,
     ownerCanPayFee: derived?.ownerCanPayFee, diagnostics: derived?.diagnostics ?? [],
     // Owner balances are shown to the heir only after handover (PRD H2).
@@ -128,22 +138,50 @@ export async function planWithState(plan: Plan, role: "owner" | "heir") {
 
 export async function listPlans(s: Session, as: "owner" | "heir") {
   const col = as === "owner" ? plans.ownerAddress : plans.heirAddress;
-  const where = as === "owner"
-    ? and(eq(col, s.address), eq(plans.network, s.network), isNull(plans.supersededBy))
-    : and(eq(col, s.address), eq(plans.network, s.network), isNull(plans.supersededBy), ne(plans.status, "DRAFT"));
+  const where = and(eq(col, s.address), eq(plans.network, s.network), isNull(plans.supersededBy), ne(plans.status, "DRAFT"));
   const rows = await db().select().from(plans).where(where).orderBy(desc(plans.createdAt)).limit(20);
   return Promise.all(rows.map((p) => planWithState(p, as)));
 }
 
 export function packetFor(plan: Plan) {
   if (plan.status === "DRAFT") throw new PlanError("The packet is available once the plan is armed", 409);
-  return makePacket({
-    network: plan.network as NetworkName, owner: plan.ownerAddress, heir: plan.heirAddress, variant: plan.variant as Variant,
-    inactivitySeconds: plan.inactivitySecs, graceSeconds: plan.graceSecs, createdAt: plan.createdAt,
-    plan: {
-      baseSeq: BigInt(plan.baseSeq), phase1Seq: BigInt(plan.phase1Seq), phase2Seq: BigInt(plan.phase2Seq),
-      phase1Hash: plan.phase1Hash, phase2Hash: plan.phase2Hash, phase1Xdr: plan.phase1Xdr, phase2Xdr: plan.phase2Xdr,
-    },
+  return packetFromRow(plan);
+}
+
+/** Same windows/heir unless overridden; the new setup also removes this plan's leftover signers. */
+export async function rearm(s: Session, id: string, overrides: Partial<DraftInput>) {
+  const { plan } = await loadPlanFor(id, s);
+  return createDraft(s, {
+    heir: overrides.heir ?? plan.heirAddress,
+    inactivitySeconds: overrides.inactivitySeconds ?? plan.inactivitySecs,
+    graceSeconds: overrides.graceSeconds ?? plan.graceSecs,
+    heirEmail: overrides.heirEmail !== undefined ? overrides.heirEmail : plan.heirEmail,
   });
 }
 
+async function rikthaSignersOn(s: Session) {
+  const [account, known] = await Promise.all([loadAccountRaw(s.network, s.address), knownHashes(s.address, s.network)]);
+  if (!account) throw new PlanError("Account not found", 404);
+  const keys = new Set(account.signers.filter((x) => x.type === "preauth_tx" && x.weight > 0).map((x) => x.key));
+  return { account, hashes: [...new Set(known)].filter((h) => keys.has(preauthSignerKey(h))) };
+}
+
+/** Transaction that removes every Riktha pre-approval from the owner's account. */
+export async function revokeTx(s: Session, id: string) {
+  await loadPlanFor(id, s);
+  const { account, hashes } = await rikthaSignersOn(s);
+  if (!hashes.length) throw new PlanError("There are no Riktha approvals left on your account.", 409);
+  const tx = buildRevoke(s.network, s.address, BigInt(account.sequence), hashes);
+  return { revokeXdr: tx.toXDR(), removes: hashes.length };
+}
+
+export async function confirmRevoke(s: Session, id: string, txHash: string) {
+  const { plan } = await loadPlanFor(id, s);
+  const tx = await loadTransaction(s.network, txHash);
+  if (!tx || !tx.successful || tx.source_account !== s.address) throw new PlanError("That revoke transaction wasn't found on chain yet.", 409);
+  const { hashes } = await rikthaSignersOn(s);
+  if (hashes.length) throw new PlanError("Some Riktha approvals are still on your account.", 409);
+  await db().update(plans).set({ status: "REVOKED", updatedAt: new Date() }).where(eq(plans.id, plan.id));
+  await db().insert(planEvents).values({ planId: plan.id, type: "REVOKED", txHash: txHash.toLowerCase() });
+  return { state: "REVOKED" as const };
+}

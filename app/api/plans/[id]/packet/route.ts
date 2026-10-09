@@ -1,5 +1,6 @@
 import { requireSession } from "@/lib/server/auth";
 import { handle } from "@/lib/server/http";
+import { packetFilename } from "@/lib/server/packet";
 import { loadPlanFor, packetFor } from "@/lib/server/plans";
 
 export const GET = handle(async (_req: Request, ctx: RouteContext<"/api/plans/[id]/packet">) => {
@@ -8,7 +9,7 @@ export const GET = handle(async (_req: Request, ctx: RouteContext<"/api/plans/[i
   return new Response(JSON.stringify(packetFor(plan), null, 2), {
     headers: {
       "Content-Type": "application/json",
-      "Content-Disposition": `attachment; filename="riktha-packet-${plan.ownerAddress.slice(0, 6)}-v${plan.version}.json"`,
+      "Content-Disposition": `attachment; filename="${packetFilename(plan)}"`,
       "Cache-Control": "no-store",
     },
   });

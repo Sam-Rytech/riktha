@@ -61,6 +61,10 @@ export const notifications = pgTable("notifications", {
   cycle: bigint("cycle", { mode: "number" }).notNull(),
   recipient: text("recipient").notNull(),
   channel: text("channel").notNull(),
+  title: text("title"),
+  body: text("body"),
+  urgent: boolean("urgent").notNull().default(false),
+  readAt: timestamp("read_at", { withTimezone: true }),
   sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   unique("notifications_dedupe").on(t.planId, t.kind, t.cycle, t.recipient, t.channel),

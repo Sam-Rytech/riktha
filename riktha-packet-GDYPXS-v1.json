@@ -1,0 +1,28 @@
+{
+  "riktha": "packet/v1",
+  "network": "testnet",
+  "networkPassphrase": "Test SDF Network ; September 2015",
+  "owner": "GDYPXS5RJD6UHGRIU37V4J34M4A2BF37VTSOSNK2UI3J7RC6YODUNFPU",
+  "heir": "GCW4TC3GMOXN2LXPR2PB7ZZWDRIPY5F3NDKDQZVJSUJ2GR5SVLTHXSYT",
+  "variant": "plain",
+  "inactivitySeconds": 120,
+  "graceSeconds": 120,
+  "baseSequence": "21873697207877634",
+  "phase1": {
+    "seq": "21873698207877634",
+    "hash": "01a4a67fc402be04b2a604b651abefd18beb42dadc85332e65d20ba4098f3d22",
+    "xdr": "AAAAAgAAAADw+8uxSP1Dmiim/14nfGcBoJd/rOTpNVqiNp/EXsOHRgAAAGQATbYDO5rKAgAAAAIAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAE22AwAAAAIAAAAAAAAAeAAAAAAAAAAAAAAAAQAAAA1yaWt0aGE6bm90aWNlAAAAAAAAAQAAAAAAAAALAAAAAAAAAAAAAAAAAAAAAA=="
+  },
+  "phase2": {
+    "seq": "21873698207877635",
+    "hash": "e7b755839d03e0ea00a949804ab5b78f92ed69170b7a8d6138f269d96e6ea715",
+    "xdr": "AAAAAgAAAADw+8uxSP1Dmiim/14nfGcBoJd/rOTpNVqiNp/EXsOHRgAAAGQATbYDO5rKAwAAAAIAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHgAAAAAAAAAAAAAAAEAAAAPcmlrdGhhOmhhbmRvdmVyAAAAAAEAAAAAAAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAACtyYtmY67dLu+Onh/nNhxQ/HS7aNQ4ZqmVE6NHsqrmewAAAAEAAAAAAAAAAA=="
+  },
+  "createdAt": "2026-10-08T22:00:41.491Z",
+  "howToClaimWithoutRiktha": [
+    "1. Wait until the owner has sent nothing for the inactivity window.",
+    "2. In Stellar Lab, submit phase1.xdr as is (the owner's account pays a tiny fee), or wrap it in a fee-bump paid by your account.",
+    "3. Wait the grace window. Wrap phase2.xdr (no signature needed) in a fee-bump paid by your account, and submit.",
+    "4. You are now a signer on the owner's account and can move its assets."
+  ]
+}
