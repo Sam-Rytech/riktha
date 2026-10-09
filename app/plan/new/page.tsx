@@ -213,6 +213,7 @@ export default function NewPlan() {
             <a href={`/api/plans/${draft.planId}/packet`} download className={primary + " mt-4 inline-block"}>Download packet</a>
             {heirEmail && <p className="mt-3 text-sm text-muted">We&apos;ll also email it to {heirEmail}.</p>}
           </div>
+          <a href="/dashboard" className={secondary + " inline-block"}>Go to your dashboard</a>
         </div>
       )}
 

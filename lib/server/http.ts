@@ -1,4 +1,5 @@
 import "server-only";
+import { unstable_rethrow } from "next/navigation";
 import { ZodError } from "zod";
 import { AuthError } from "./auth";
 import { PlanError } from "./plans";
@@ -9,6 +10,7 @@ export function handle<A extends unknown[]>(fn: (...args: A) => Promise<Response
     try {
       return await fn(...args);
     } catch (e) {
+      unstable_rethrow(e); // let Next's own control-flow errors (dynamic rendering, redirects) through
       if (e instanceof AuthError) return Response.json({ error: e.message }, { status: e.status });
       if (e instanceof PlanError) return Response.json({ error: e.message, details: e.details }, { status: e.status });
       if (e instanceof ZodError) return Response.json({ error: "Invalid request", issues: e.issues }, { status: 400 });
