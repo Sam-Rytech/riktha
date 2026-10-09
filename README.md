@@ -131,7 +131,7 @@ pnpm test:kit         # heir named by email → claim code → handover with no 
 
 ## Roadmap
 
-Multiple heirs with weights; staged release; a wallet SDK so Freighter/Lobstr/xBull can offer "Set up inheritance" natively; anchor and RWA-issuer integrations; hardware wallets; mainnet after an audit.
+Cash-out for claim-kit heirs (convert to USDC and withdraw to a bank through a SEP-24 anchor); multiple heirs with weights; staged release; a wallet SDK so Freighter/Lobstr/xBull can offer "Set up inheritance" natively; anchor and RWA-issuer integrations; hardware wallets; mainnet after an audit.
 
 ## License
 

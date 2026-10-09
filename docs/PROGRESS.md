@@ -15,7 +15,7 @@ Status keys: ⬜ todo · 🟨 in progress · ✅ done · ⛔ blocked · ✂️ c
 | | |
 |---|---|
 | Phase | Build complete; next: deploy, account wiring and full testing with Sam |
-| Next action | Accounts session: Gmail app password, NEXT_PUBLIC_APP_URL in Vercel, Telegram setWebhook, cron-job.org job; then full manual test; then video |
+| Next action | Sam tests the claim kit live; then plan + record the video; then submit |
 | Blockers | none |
 | Last updated | 2026-10-08 |
 
@@ -166,6 +166,7 @@ Setup, packet, dashboard countdown, check-in, cancel, heir claim, `/claim` packe
 | 10-08 | Email via Gmail app password (Nodemailer SMTP) for now | No domain yet; Resend + own domain later if deliverability suffers |
 | 10-09 | Heir notifications use the owner-provided heir email even if unverified | Otherwise heirs only hear about NOTICE/CLAIMABLE after signing up; the owner chose to share it |
 | 10-09 | Keeper accepts `?only=<planId>` | Scripted test runs must not start claims on other people's plans |
+| 10-09 | Anchor cash-out moved to the roadmap | Heirs can already send to any exchange (with a memo); time goes to testing and the video |
 | 10-09 | Lint rule `react-hooks/set-state-in-effect` off | It flags async fetch-on-mount (setState only after await) |
 | 10-08 | SDK 17: always use `txHashHex()` / `memoText()` | `tx.hash()` and the memo value are `Uint8Array`, so `.toString("hex")` silently gives `"1,2,3…"` |
 

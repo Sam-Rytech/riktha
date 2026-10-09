@@ -687,4 +687,4 @@ The **claim kit** `{v, kdf, iterations, salt, iv, ciphertext, heirPublic}` is st
 
 **Trade-off (stated in the UI):** like a will, whoever holds both the packet/email link *and* the claim code can claim, but only after the inactivity and grace windows, and the owner can cancel during the grace window. The owner rotates the code by changing the heir.
 
-**Next (if time allows): cash-out.** After handover, "Withdraw to my bank" converts to USDC and opens an anchor's SEP-24 withdrawal (testnet: `testanchor.stellar.org`), signed with `H` over the owner account.
+**Roadmap (not in the MVP, decided 2026-10-09): cash-out.** After handover, "Withdraw to my bank" converts to USDC and opens an anchor's SEP-24 withdrawal (testnet: `testanchor.stellar.org`), signed with `H` over the owner account.
