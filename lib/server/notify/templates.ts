@@ -33,12 +33,12 @@ export function render(kind: NotificationKind, c: TemplateCtx): Message {
       return { title: `Check in: ${pct}% of your inactivity window has passed`, body: `Your account ${short(c.owner)} hasn't sent anything for a while. If nothing is sent by ${fmtDate(c.eligibleAt)}, a claim can start. Send any transaction, or press "I'm alive" on your dashboard.`, cta: dash };
     }
     case "NOTICE_OWNER":
-      return { title: "URGENT: a claim on your account has started", body: `Your account ${short(c.owner)} was inactive for ${I}, so a claim started. If you're reading this, send any transaction before ${fmtDate(c.claimableAt)} to cancel it, or press "Cancel the claim" on your dashboard.`, cta: dash };
+      return { title: "A claim on your account has started", body: `Your account ${short(c.owner)} was inactive for ${I}, so a claim started. If you're reading this, send any transaction before ${fmtDate(c.claimableAt)} to cancel it, or press "Cancel the claim" on your dashboard.`, cta: dash };
     case "NOTICE_HEIR":
       return { title: "The owner's inactivity window has passed", body: `Account ${short(c.owner)} has been inactive for ${I}. The owner now has ${G} to respond. Unless they do, you can complete the handover from ${fmtDate(c.claimableAt)}.`, cta: heirPage };
     case "GRACE_50":
     case "GRACE_90":
-      return { title: "URGENT: your heir can take over soon", body: `A claim on your account ${short(c.owner)} is in progress. Unless you send any transaction before ${fmtDate(c.claimableAt)}, your heir ${short(c.heir)} will be able to control your account.`, cta: dash };
+      return { title: "Your heir can take over soon unless you respond", body: `A claim on your account ${short(c.owner)} is in progress. Unless you send any transaction before ${fmtDate(c.claimableAt)}, your heir ${short(c.heir)} will be able to control your account.`, cta: dash };
     case "CLAIMABLE_HEIR":
       return { title: "You can complete the handover now", body: `The owner of ${short(c.owner)} didn't respond during the ${G} grace period. You can now add your key to their account and move the assets.`, cta: heirPage };
     case "INHERITED_OWNER":
@@ -54,17 +54,24 @@ export function render(kind: NotificationKind, c: TemplateCtx): Message {
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]!);
 
-export function toEmail(m: Message, urgent: boolean): { subject: string; text: string; html: string } {
-  const text = `${m.body}${m.cta ? `\n\n${m.cta.label}: ${m.cta.url}` : ""}\n\n— Riktha · inheritance for Stellar accounts (testnet)`;
+export interface EmailContent { subject: string; text: string; html: string }
+
+/**
+ * Deliverability without our own domain: no shouting ("URGENT"), one link, a plain-text part,
+ * and a footer that says why the mail was sent. `reason` names how the address got here.
+ */
+export function toEmail(m: Message, urgent: boolean, reason = "you added this address in your Riktha settings"): EmailContent {
+  const footer = `You're receiving this because ${reason}. To change where Riktha sends alerts, open Settings in the app. Riktha runs on the Stellar testnet and never holds your keys.`;
+  const text = `${m.title}\n\n${m.body}${m.cta ? `\n\n${m.cta.label}: ${m.cta.url}` : ""}\n\n--\n${footer}`;
   const html = `<!doctype html><html><body style="margin:0;background:#f7f3ea;font-family:Georgia,serif;color:#1d1b16">
 <div style="max-width:560px;margin:0 auto;padding:32px 24px">
-<p style="font-size:13px;letter-spacing:.15em;text-transform:uppercase;color:${urgent ? "#8a1c1c" : "#1f4d3a"};margin:0 0 8px">${urgent ? "Urgent" : "Riktha"}</p>
+<p style="font-size:14px;color:${urgent ? "#8a1c1c" : "#1f4d3a"};margin:0 0 8px">${urgent ? "Action needed" : "Riktha"}</p>
 <h1 style="font-size:22px;font-weight:normal;margin:0 0 16px">${esc(m.title)}</h1>
 <p style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6;color:#3b382f">${esc(m.body)}</p>
 ${m.cta ? `<p style="margin:24px 0"><a href="${esc(m.cta.url)}" style="background:#1f4d3a;color:#fffdf8;padding:10px 18px;border-radius:999px;text-decoration:none;font-family:Arial,sans-serif;font-size:14px">${esc(m.cta.label)}</a></p>` : ""}
-<p style="font-family:Arial,sans-serif;font-size:12px;color:#5f5a4e;margin-top:32px">Riktha · inheritance for Stellar accounts (testnet). Riktha never holds your keys.</p>
+<p style="font-family:Arial,sans-serif;font-size:12px;line-height:1.5;color:#5f5a4e;margin-top:32px">${esc(footer)}</p>
 </div></body></html>`;
-  return { subject: urgent ? `URGENT: ${m.title.replace(/^URGENT: /, "")}` : m.title, text, html };
+  return { subject: m.title, text, html };
 }
 
 export function toTelegram(m: Message, urgent: boolean): string {

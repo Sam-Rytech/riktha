@@ -36,9 +36,9 @@ export async function setEmail(address: string, email: string | null) {
   const link = `${appUrl()}/api/contacts/verify?token=${t}`;
   const ok = await sendEmail(email, toEmail({
     title: "Confirm your email for Riktha",
-    body: "Confirm this address to receive reminders before your inactivity window ends, and urgent alerts if a claim starts. If you didn't ask for this, ignore this email.",
+    body: "Confirm this address to receive reminders before your inactivity window ends, and an alert if a claim ever starts. If you didn't ask for this, ignore this email.",
     cta: { label: "Confirm email", url: link },
-  }, false));
+  }, false, "someone entered this address in Riktha's settings; if that wasn't you, ignore this email"));
   if (!ok) throw new PlanError("We couldn't send the verification email. Check the address and try again.", 502);
   return getContact(address);
 }

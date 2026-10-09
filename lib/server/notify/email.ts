@@ -20,7 +20,12 @@ export async function sendEmail(to: string, mail: { subject: string; text: strin
   const t = getTransport();
   if (!t) return false;
   try {
-    await t.sendMail({ from: process.env.MAIL_FROM ?? process.env.SMTP_USER, to, ...mail, attachments });
+    await t.sendMail({
+      from: process.env.MAIL_FROM ?? process.env.SMTP_USER,
+      replyTo: process.env.SMTP_USER,
+      to, ...mail, attachments,
+      headers: { "List-Unsubscribe": `<${(process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "")}/settings>` },
+    });
     return true;
   } catch (e) {
     console.error("email failed", to.replace(/(.).+@/, "$1…@"), (e as Error).message);

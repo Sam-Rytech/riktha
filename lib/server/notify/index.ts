@@ -44,7 +44,10 @@ export async function dispatch(plan: Plan, due: Due, times: { eligibleAt?: numbe
       const attachments: Attachment[] = due.kind === "ARMED_HEIR"
         ? [{ filename: packetFilename(plan), content: JSON.stringify(packetFromRow(plan), null, 2), contentType: "application/json" }]
         : [];
-      if (await sendEmail(email, toEmail(msg, urgent), attachments)) sent++;
+      const reason = contact?.emailVerified && contact.email === email
+        ? "you added this address in your Riktha settings"
+        : "the owner of a Stellar account named you as their heir and gave this address";
+      if (await sendEmail(email, toEmail(msg, urgent, reason), attachments)) sent++;
       else await release(id);
     }
   }
