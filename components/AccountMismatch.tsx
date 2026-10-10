@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { currentAddress } from "@/lib/wallet/freighter";
-import { signIn, whoAmI } from "@/lib/wallet/session";
+import { signIn, useSession } from "@/lib/wallet/session";
 
 const short = (a: string) => `${a.slice(0, 4)}…${a.slice(-4)}`;
 
@@ -11,7 +11,8 @@ const short = (a: string) => `${a.slice(0, 4)}…${a.slice(-4)}`;
  * would sign with differs from the one this site is signed in as (found in manual testing).
  */
 export default function AccountMismatch() {
-  const [pair, setPair] = useState<{ session: string; wallet: string } | null>(null);
+  const { address: session } = useSession();
+  const [wallet, setWallet] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -19,8 +20,8 @@ export default function AccountMismatch() {
     let alive = true;
     const check = async () => {
       try {
-        const [session, wallet] = await Promise.all([whoAmI(), currentAddress()]);
-        if (alive) setPair(session && wallet && session !== wallet ? { session, wallet } : null);
+        const w = await currentAddress();
+        if (alive) setWallet(w ?? null);
       } catch { /* Freighter missing or locked: nothing to compare */ }
     };
     check();
@@ -29,6 +30,7 @@ export default function AccountMismatch() {
     return () => { alive = false; clearInterval(t); window.removeEventListener("focus", check); };
   }, []);
 
+  const pair = session && wallet && session !== wallet ? { session, wallet } : null;
   if (!pair) return null;
   return (
     <div role="alert" className="mx-[var(--inset)] mt-2">
@@ -41,7 +43,7 @@ export default function AccountMismatch() {
           disabled={busy}
           onClick={async () => {
             setBusy(true); setError(undefined);
-            try { await signIn(); window.location.reload(); } catch (e) { setError((e as Error).message); setBusy(false); }
+            try { await signIn(); setBusy(false); } catch (e) { setError((e as Error).message); setBusy(false); }
           }}
           className="rounded-full bg-oxblood px-4 py-2 font-medium text-white hover:brightness-110 disabled:opacity-60"
         >

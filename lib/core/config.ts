@@ -36,6 +36,9 @@ export const MIN_WINDOWS: Record<NetworkName, { I: number; G: number }> = {
   mainnet: { I: 30 * DAY, G: 7 * DAY },
 };
 
+/** Upper bounds for custom windows: long enough for any real plan, short enough to catch typos (e.g. 18000 days). */
+export const MAX_WINDOWS = { I: 3650 * DAY, G: 365 * DAY };
+
 export const MEMOS = {
   notice: "riktha:notice",
   handover: "riktha:handover",

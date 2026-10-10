@@ -7,14 +7,16 @@ import { AppMain, btn, ErrorBox as UiErrorBox, inputCls } from "@/components/ui"
 import { newHeirKit } from "@/lib/core/claimkit";
 import { parseTx } from "@/lib/core/builders";
 import { NetworkName, PRESETS, PresetName } from "@/lib/core/config";
-import { formatDuration } from "@/lib/core/eligibility";
+import { checkWindows, formatDuration } from "@/lib/core/eligibility";
 import type { ExplainedTx } from "@/lib/core/explain";
 import { explorerTxUrl, submit } from "@/lib/stellar/horizon";
 import { signXdr } from "@/lib/wallet/freighter";
-import { signIn, whoAmI } from "@/lib/wallet/session";
+import { signIn, useSession } from "@/lib/wallet/session";
 
 const NETWORK = (process.env.NEXT_PUBLIC_NETWORK ?? "testnet") as NetworkName;
 const presets = (Object.keys(PRESETS) as PresetName[]).filter((k) => NETWORK === "testnet" || !PRESETS[k].testnetOnly);
+/** Units for custom windows. Minutes and hours only make sense for trying it out on testnet. */
+const UNITS: [string, number][] = NETWORK === "testnet" ? [["days", 86_400], ["hours", 3_600], ["minutes", 60]] : [["days", 86_400]];
 
 interface Draft { planId: string; setupXdr: string; explain: { setup: ExplainedTx; phase1: ExplainedTx; phase2: ExplainedTx }; removesStaleSigners: number }
 type Step = "heir" | "timing" | "review" | "done";
@@ -32,24 +34,28 @@ const BUSY_LABEL: Record<Exclude<Busy, null>, string> = {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export default function NewPlan() {
-  const [me, setMe] = useState<string | null | undefined>(undefined);
+  const session = useSession();
+  const me = session.loaded ? session.address : undefined;
   const [step, setStep] = useState<Step>("heir");
   const [heir, setHeir] = useState("");
   const [heirEmail, setHeirEmail] = useState("");
   const [heirKind, setHeirKind] = useState<HeirKind>("kit");
   const [claimCode, setClaimCode] = useState<string>();
   const [codeSaved, setCodeSaved] = useState(false);
-  const [preset, setPreset] = useState<PresetName>(NETWORK === "testnet" ? "demo" : "d180");
+  const [preset, setPreset] = useState<PresetName | "custom">(NETWORK === "testnet" ? "demo" : "d180");
+  const [custom, setCustom] = useState({ i: "180", iUnit: 86_400, g: "30", gUnit: 86_400 });
   const [draft, setDraft] = useState<Draft>();
   const [busy, setBusy] = useState<Busy>(null);
   const [error, setError] = useState<{ message: string; details?: string[] }>();
   const [result, setResult] = useState<{ eligibleAt?: number; txHash: string }>();
   const headingRef = useRef<HTMLHeadingElement>(null);
 
-  useEffect(() => { whoAmI().then(setMe).catch(() => setMe(null)); }, []);
   useEffect(() => { headingRef.current?.focus(); }, [step]);
 
-  const { I, G } = PRESETS[preset];
+  const { I, G } = preset === "custom"
+    ? { I: Math.round(Number(custom.i) * custom.iUnit), G: Math.round(Number(custom.g) * custom.gUnit) }
+    : PRESETS[preset];
+  const windowErrors = preset === "custom" ? checkWindows(NETWORK, I, G) : [];
   const heirValid = StrKey.isValidEd25519PublicKey(heir.trim());
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(heirEmail.trim());
   const heirStepValid = heirKind === "kit" ? emailValid : heirValid && heir.trim() !== me;
@@ -118,7 +124,7 @@ export default function NewPlan() {
       <Shell>
         <h1 className="headline text-[30px] sm:text-[40px]">Create your inheritance plan</h1>
         <p className="mt-3 text-muted">Sign in with Freighter first, using the account you want to pass on.</p>
-        <button onClick={() => signIn().then(setMe).catch((e) => setError({ message: e.message }))} className={primary + " mt-6"}>
+        <button onClick={() => signIn().catch((e) => setError({ message: e.message }))} className={primary + " mt-6"}>
           Sign in with Freighter
         </button>
         <ErrorBox error={error} />
@@ -148,6 +154,35 @@ export default function NewPlan() {
                 <span className="mt-1 block text-[14px] text-muted">{desc}</span>
               </label>
             ))}
+            <div className={`rounded-[var(--radius-card)] border-2 p-5 transition-colors sm:col-span-2 ${preset === "custom" ? "border-green bg-green-tint" : "border-line hover:border-ink/30"}`}>
+              <label className="flex cursor-pointer items-center justify-between">
+                <input type="radio" name="preset" value="custom" aria-label="Custom" checked={preset === "custom"} onChange={() => setPreset("custom")} className="sr-only" />
+                <span className="font-medium">Custom</span>
+                <span aria-hidden className={`h-4 w-4 rounded-full border ${preset === "custom" ? "border-[6px] border-green" : "border-line"}`} />
+              </label>
+              <span className="mt-1 block text-[14px] text-muted">Choose exactly how long to wait, and how long you get to respond.</span>
+              {preset === "custom" && (
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  {([["Wait this long", "i", "iUnit"], ["Then time to respond", "g", "gUnit"]] as const).map(([label, v, u]) => (
+                    <label key={v} className="block text-[14px]">
+                      <span className="font-medium">{label}</span>
+                      <span className="mt-1.5 flex gap-2">
+                        <input type="number" inputMode="numeric" min={1} step={1} value={custom[v]}
+                          onChange={(e) => setCustom((c) => ({ ...c, [v]: e.target.value }))}
+                          className={inputCls + " min-w-0 flex-1"} aria-label={`${label} (number)`} />
+                        <select value={custom[u]} onChange={(e) => setCustom((c) => ({ ...c, [u]: Number(e.target.value) }))}
+                          className={inputCls + " w-auto"} aria-label={`${label} (unit)`} disabled={UNITS.length === 1}>
+                          {UNITS.map(([n, sec]) => <option key={n} value={sec}>{n}</option>)}
+                        </select>
+                      </span>
+                    </label>
+                  ))}
+                  {windowErrors.length > 0 && (
+                    <ul role="alert" className="space-y-1 text-[14px] text-oxblood sm:col-span-2">{windowErrors.map((m) => <li key={m}>{m}</li>)}</ul>
+                  )}
+                </div>
+              )}
+            </div>
           </fieldset>
 
           {heirKind === "wallet" && (
@@ -197,14 +232,14 @@ export default function NewPlan() {
               </label>
             ))}
           </fieldset>
-          <div className="rounded-[var(--radius-card)] bg-stone p-5 text-[15px] leading-relaxed">
+          {windowErrors.length === 0 && <div className="rounded-[var(--radius-card)] bg-stone p-5 text-[15px] leading-relaxed">
             <p><b>If you send nothing from this account for {formatDuration(I)}</b>, a claim can start. We alert you by email, Telegram and the dashboard.</p>
             <p className="mt-2"><b>You then have {formatDuration(G)}</b> to send any transaction, which cancels the claim. After that, your heir can add their key to your account.</p>
             <p className="mt-2 text-muted">Sending anything resets the clock: a payment, a trade, or the &ldquo;I&apos;m alive&rdquo; button. Receiving money doesn&apos;t count.</p>
-          </div>
+          </div>}
           <div className="flex gap-3">
             <button onClick={() => setStep("heir")} className={secondary}>Back</button>
-            <button onClick={buildDraft} disabled={busy !== null} className={primary}>Review plan</button>
+            <button onClick={buildDraft} disabled={busy !== null || windowErrors.length > 0} className={primary}>Review plan</button>
           </div>
         </div>
       )}

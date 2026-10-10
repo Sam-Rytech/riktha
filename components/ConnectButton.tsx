@@ -1,21 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { signIn, signOut, whoAmI } from "@/lib/wallet/session";
+import { signIn, signOut, useSession } from "@/lib/wallet/session";
 
 const short = (a: string) => `${a.slice(0, 4)}…${a.slice(-4)}`;
 
 export default function ConnectButton({ tone = "light" }: { tone?: "light" | "night" }) {
   const night = tone === "night";
-  const [address, setAddress] = useState<string | null>(null);
+  const { address, loaded } = useSession();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
 
   const box = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    whoAmI().then(setAddress).catch(() => setAddress(null));
-  }, []);
 
   // The error floats under the header, so it must go away on its own: after a few seconds, on Escape, or on a
   // click anywhere outside it.
@@ -33,7 +29,7 @@ export default function ConnectButton({ tone = "light" }: { tone?: "light" | "ni
     setBusy(true);
     setError(undefined);
     try {
-      setAddress(await signIn());
+      await signIn();
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -41,13 +37,15 @@ export default function ConnectButton({ tone = "light" }: { tone?: "light" | "ni
     }
   };
 
+  // Until the first check finishes, hold the space without flashing "Sign in" at a signed-in user.
+  if (!loaded) return <span aria-hidden className="inline-block h-10 w-[76px]" />;
   if (address) {
     return (
       <div className="flex items-center gap-1">
         <span className={`inline-flex items-center gap-2 rounded-full px-3 py-2 font-mono text-[13px] ${night ? "bg-white/10 text-white" : "bg-stone"}`} title={address}>
           <span aria-hidden className="h-2 w-2 rounded-full bg-green" />{short(address)}
         </span>
-        <button onClick={async () => { await signOut(); setAddress(null); }} className={`rounded-full px-3 py-2 text-[13px] ${night ? "text-white/70 hover:bg-white/10 hover:text-white" : "text-muted hover:bg-ink/5 hover:text-ink"}`}>Sign out</button>
+        <button onClick={() => { signOut(); }} className={`rounded-full px-3 py-2 text-[13px] ${night ? "text-white/70 hover:bg-white/10 hover:text-white" : "text-muted hover:bg-ink/5 hover:text-ink"}`}>Sign out</button>
       </div>
     );
   }

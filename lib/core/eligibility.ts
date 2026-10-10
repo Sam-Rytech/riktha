@@ -1,5 +1,5 @@
 import { StrKey } from "@stellar/stellar-sdk";
-import { MIN_WINDOWS, NetworkName, OWNER_BUFFER_STROOPS } from "./config";
+import { MAX_WINDOWS, MIN_WINDOWS, NetworkName, OWNER_BUFFER_STROOPS } from "./config";
 import { availableXlmStroops, HorizonAccount } from "./state";
 
 export interface OwnerCheck {
@@ -64,6 +64,8 @@ export function checkWindows(network: NetworkName, inactivitySeconds: number, gr
   const errors: string[] = [];
   if (!Number.isInteger(inactivitySeconds) || inactivitySeconds < min.I) errors.push(`The inactivity window must be at least ${formatDuration(min.I)}.`);
   if (!Number.isInteger(graceSeconds) || graceSeconds < min.G) errors.push(`The grace window must be at least ${formatDuration(min.G)}.`);
+  if (inactivitySeconds > MAX_WINDOWS.I) errors.push(`The inactivity window can be at most ${formatDuration(MAX_WINDOWS.I)}.`);
+  if (graceSeconds > MAX_WINDOWS.G) errors.push(`The grace window can be at most ${formatDuration(MAX_WINDOWS.G)}.`);
   return errors;
 }
 

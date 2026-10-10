@@ -81,6 +81,8 @@ describe("checkHeirAccount / checkWindows / format", () => {
     expect(checkWindows("testnet", 60, 60)).toEqual([]);
     expect(checkWindows("testnet", 59, 60)).toHaveLength(1);
     expect(checkWindows("mainnet", 120, 120)).toHaveLength(2);
+    expect(checkWindows("testnet", 3650 * 86400, 365 * 86400)).toEqual([]);
+    expect(checkWindows("testnet", 3651 * 86400, 366 * 86400)).toHaveLength(2);
   });
   it("formats XLM", () => {
     expect(formatXlm(20_000_000n)).toBe("2");
