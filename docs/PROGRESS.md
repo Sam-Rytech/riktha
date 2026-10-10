@@ -189,6 +189,14 @@ Setup, packet, dashboard countdown, check-in, cancel, heir claim, `/claim` packe
 
 ## Daily log
 
+### 2026-10-10: redesign pass 2 (de-slop)
+- Sam: pass 1 "still has an AI slop feel". Removed the glowing grid sections, serif italic accents, count-ups, marquee, "Live" pills and the wireframe protocol diagram.
+- One grid: every section, the header and the footer share `containerCls` (max 1200 px; 24/40 px gutters). Measured left edges match at 1440 / 768 / 390.
+- Landing: hero with a real dashboard slice; flat statement; a timeline "How it works"; the Owner/Heir preview; claim-kit steps; one flat ink protocol slab with an evidence table; limits plus Q&A; a green-tint CTA. Mobile gets stacked lists instead of tables.
+- QA: `scripts/qa-shots.mjs` (CDP: exact viewport, full-page capture, alignment check) plus `scripts/qa-slice.py`. The in-app browser pane crops captures under 125% Windows scaling, so don't use it for screenshots.
+- `next dev` (Turbopack) crashes with 0xc0000142 on this machine; QA with `pnpm build && pnpm start`. Start the server with `NODE_EXTRA_CA_CERTS` set, or Neon calls fail.
+- Server components must import `btn` / `containerCls` from `components/styles.ts`, not from the `"use client"` `ui.tsx`.
+
 ### 2026-10-09 (evening): front-end redesign
 - Analysed tenderr.xyz, naust.namite.xyz and shamar.namite.xyz at 1440 / 768 / 375 px.
 - Blend chosen with Sam: Naust's framed hero, Tender's light→dark rhythm, Shamar's rounded slabs, and an embedded live preview. Light-led, deep green, tight grotesk (Instrument Sans + Instrument Serif accent + Geist Mono). Motion via motion.dev.

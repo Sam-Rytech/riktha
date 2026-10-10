@@ -239,13 +239,13 @@ export default function NewPlan() {
       {step === "done" && draft && result && (
         <div className="space-y-6">
           <h1 ref={headingRef} tabIndex={-1} className="headline text-[30px] outline-none sm:text-[40px]">Your plan is armed</h1>
-          <div className="on-night rounded-[var(--radius-card)] bg-night p-6 text-white night-grid">
-            <p className="font-medium text-glow">✓ Armed on the Stellar network</p>
+          <div className="rounded-[var(--radius-card)] border border-green/30 bg-green-tint p-6">
+            <p className="font-medium text-green">✓ Armed on the Stellar network</p>
             <p className="mt-2">
               If you send nothing until <b>{result.eligibleAt ? new Date(result.eligibleAt * 1000).toLocaleString() : "the window ends"}</b>, a claim can start.
               Using your account normally pushes this date back.
             </p>
-            <a href={explorerTxUrl(NETWORK, result.txHash)} target="_blank" rel="noreferrer" className="mt-3 inline-block text-[14px] text-glow underline underline-offset-4">
+            <a href={explorerTxUrl(NETWORK, result.txHash)} target="_blank" rel="noreferrer" className="mt-3 inline-block text-[14px] text-green underline underline-offset-4">
               View the setup transaction
             </a>
           </div>
@@ -284,25 +284,25 @@ const STEPS: [Step, string, string][] = [
 function Shell({ children, step }: { children: React.ReactNode; step?: Step }) {
   return (
     <AppMain>
-      <div className="grid items-start gap-5 lg:grid-cols-[300px_1fr]">
-        <aside className="on-night rounded-[var(--radius-slab)] bg-night p-6 text-white night-grid lg:sticky lg:top-24">
-          <p className="text-[14px] text-white/55">New inheritance plan</p>
-          <ol className="mt-5 space-y-1" aria-label="Progress">
+      <div className="grid items-start gap-6 lg:grid-cols-[280px_1fr]">
+        <aside className="rounded-[var(--radius-card)] border border-line bg-surface p-5 lg:sticky lg:top-24">
+          <p className="text-[14px] text-muted">New inheritance plan</p>
+          <ol className="mt-4 space-y-1" aria-label="Progress">
             {STEPS.map(([key, label, hint], i) => {
               const at = STEPS.findIndex(([k]) => k === step);
               const done = step !== undefined && i < at, active = key === step;
               return (
-                <li key={key} aria-current={active ? "step" : undefined} className={`rounded-2xl px-3 py-2.5 ${active ? "bg-white/10" : ""}`}>
-                  <p className={`flex items-center gap-3 text-[15px] font-medium ${active ? "text-white" : done ? "text-glow" : "text-white/45"}`}>
+                <li key={key} aria-current={active ? "step" : undefined} className={`rounded-xl px-3 py-2.5 ${active ? "bg-stone" : ""}`}>
+                  <p className={`flex items-center gap-3 text-[15px] font-medium ${active ? "text-ink" : done ? "text-green" : "text-muted"}`}>
                     <span className="grid h-6 w-6 place-items-center rounded-full border border-current font-mono text-[11px]">{done ? "✓" : i + 1}</span>{label}
                   </p>
-                  {active && <p className="mt-1 pl-9 text-[13px] text-white/55">{hint}</p>}
+                  {active && <p className="mt-1 pl-9 text-[13px] text-muted">{hint}</p>}
                 </li>
               );
             })}
           </ol>
         </aside>
-        <div className="min-w-0 rounded-[var(--radius-slab)] bg-surface p-6 sm:p-10">
+        <div className="min-w-0 rounded-[var(--radius-card)] border border-line bg-surface p-6 sm:p-10">
           <div className="space-y-6">{children}</div>
         </div>
       </div>
@@ -326,21 +326,21 @@ function ClaimCodeCard({ code, saved, onSaved, email }: { code: string; saved: b
     w.print();
   };
   return (
-    <section className="on-night rounded-[var(--radius-slab)] bg-night p-6 text-white night-grid sm:p-8">
+    <section className="rounded-[var(--radius-card)] border-2 border-ink p-6 sm:p-8">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h3 className="text-[19px] font-semibold tracking-[-0.01em]">Your heir&apos;s claim code</h3>
-        <span className="font-mono text-[12px] text-white/50">shown once</span>
+        <span className="font-mono text-[12px] text-muted">shown once</span>
       </div>
-      <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-white/65">Write these six words down in order and keep them with your will. Your heir needs them to claim. Riktha never sees them.</p>
+      <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-muted">Write these six words down in order and keep them with your will. Your heir needs them to claim. Riktha never sees them.</p>
       <ol className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3">
         {words.map((w, i) => (
-          <li key={i} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 font-mono text-[17px]"><span className="mr-3 text-[12px] text-white/40">{i + 1}</span>{w}</li>
+          <li key={i} className="rounded-xl bg-stone px-4 py-3 font-mono text-[17px]"><span className="mr-3 text-[12px] text-muted">{i + 1}</span>{w}</li>
         ))}
       </ol>
       <div className="mt-6 flex flex-wrap items-center gap-4">
-        <button type="button" onClick={print} className={btn.ghostNight}>Print</button>
+        <button type="button" onClick={print} className={btn.secondary}>Print</button>
         <label className="flex cursor-pointer items-center gap-3 text-[15px]">
-          <input type="checkbox" checked={saved} onChange={(e) => onSaved(e.target.checked)} className="h-5 w-5 accent-[var(--glow)]" />
+          <input type="checkbox" checked={saved} onChange={(e) => onSaved(e.target.checked)} className="h-5 w-5 accent-[var(--green)]" />
           I&apos;ve written down the code and will keep it safe
         </label>
       </div>

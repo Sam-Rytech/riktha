@@ -50,7 +50,7 @@ export default function ClaimPage() {
   }, [packet, refresh]);
 
   return (
-    <main className="mx-auto w-full max-w-3xl space-y-5 px-[var(--inset)] pb-6 pt-8 sm:pt-12">
+    <main className="mx-auto w-full max-w-[1200px] space-y-5 px-6 pb-6 pt-8 sm:px-10 sm:pt-12 *:max-w-3xl">
       <div>
         <h1 className="headline text-[30px] sm:text-[40px]">Claim with an inheritance packet</h1>
         <p className="mt-2 text-muted">

@@ -52,7 +52,6 @@
   --color-danger: var(--oxblood);
 
   --font-sans: var(--font-body);
-  --font-serif: var(--font-accent);
   --font-mono: var(--font-code);
 
   --radius-slab: var(--radius-slab);
@@ -76,7 +75,10 @@ body {
   outline-offset: 2px;
   border-radius: 6px;
 }
-.on-night :focus-visible { outline-color: var(--glow); }
+.on-night :focus-visible { outline-color: #fff; }
+
+h1, h2, h3 { text-wrap: balance; }
+p, li, dd { text-wrap: pretty; }
 
 /* Headline voice: tight grotesk. */
 @utility display {
@@ -90,68 +92,11 @@ body {
   line-height: 1.02;
 }
 
-/* Rounded slab inset from the window edge (Shamar-style rhythm). */
+/* Rounded slab inset from the window edge. Used sparingly: only for the key moments. */
 @utility slab {
   border-radius: var(--radius-slab);
   margin-inline: var(--inset);
 }
-
-/* Faint grid texture for night slabs. */
-@utility night-grid {
-  background-image:
-    radial-gradient(ellipse 80% 60% at 70% 20%, rgba(79, 208, 143, 0.10), transparent 60%),
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: auto, 48px 48px, 48px 48px;
-}
-
-/* Light travelling around a card's border (for the card in view). */
-@keyframes trace {
-  to { --trace-angle: 360deg; }
-}
-@property --trace-angle {
-  syntax: "<angle>";
-  initial-value: 0deg;
-  inherits: false;
-}
-@utility trace-border {
-  position: relative;
-  &::before {
-    content: "";
-    position: absolute;
-    inset: -1px;
-    border-radius: inherit;
-    padding: 1px;
-    background: conic-gradient(from var(--trace-angle), transparent 0deg, transparent 280deg, var(--glow) 330deg, transparent 360deg);
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    animation: trace 4s linear infinite;
-    opacity: var(--trace-opacity, 0);
-    transition: opacity 600ms ease;
-    pointer-events: none;
-  }
-}
-
-@keyframes breathe {
-  0%, 100% { opacity: 0.35; transform: scale(0.96); }
-  50% { opacity: 0.6; transform: scale(1.04); }
-}
-@keyframes marquee {
-  to { transform: translateX(-50%); }
-}
-@keyframes livedot {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(79, 208, 143, 0.55); }
-  70% { box-shadow: 0 0 0 7px rgba(79, 208, 143, 0); }
-}
-@keyframes scan {
-  0% { transform: translateY(-10%); opacity: 0; }
-  10%, 90% { opacity: 1; }
-  100% { transform: translateY(110%); opacity: 0; }
-}
-@utility animate-breathe { animation: breathe 6s ease-in-out infinite; }
-@utility animate-marquee { animation: marquee 40s linear infinite; }
-@utility animate-livedot { animation: livedot 2s ease-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

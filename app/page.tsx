@@ -1,9 +1,9 @@
 import { FinalCta, LimitsFaq } from "@/components/landing/Closing";
-import DarkHalf from "@/components/landing/DarkHalf";
 import Hero from "@/components/landing/Hero";
+import HowItWorks from "@/components/landing/HowItWorks";
 import LivePreview from "@/components/landing/LivePreview";
 import NoCrypto from "@/components/landing/NoCrypto";
-import PinnedStory from "@/components/landing/PinnedStory";
+import Protocol from "@/components/landing/Protocol";
 import Statement from "@/components/landing/Statement";
 
 export default function Home() {
@@ -11,10 +11,10 @@ export default function Home() {
     <main>
       <Hero />
       <Statement />
-      <PinnedStory />
+      <HowItWorks />
       <LivePreview />
       <NoCrypto />
-      <DarkHalf />
+      <Protocol />
       <LimitsFaq />
       <FinalCta />
     </main>

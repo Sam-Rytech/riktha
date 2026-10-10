@@ -1,19 +1,12 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
+import { btn, containerCls, inputCls } from "./styles";
+
+export { btn, containerCls, inputCls };
 
 /* ---------- Buttons ---------- */
 
-const base = "inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[15px] font-medium transition-[background,color,border-color,transform] duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100";
-export const btn = {
-  primary: `${base} bg-green text-white hover:bg-green-strong`,
-  secondary: `${base} border border-line bg-surface text-ink hover:border-ink/40`,
-  danger: `${base} bg-oxblood text-white hover:brightness-110`,
-  /** For night slabs. */
-  light: `${base} bg-white text-night hover:bg-white/85`,
-  ghostNight: `${base} border border-white/20 text-white hover:border-white/50`,
-  link: "text-[15px] text-green underline decoration-green/30 underline-offset-4 hover:decoration-green",
-};
 
 type BtnVariant = keyof typeof btn;
 export function Button({ variant = "primary", className = "", ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: BtnVariant }) {
@@ -55,7 +48,7 @@ export function Slab({ children, className = "", tone = "surface", as: Tag = "se
 } & React.HTMLAttributes<HTMLElement>) {
   const tones = {
     surface: "bg-surface",
-    night: "on-night bg-night text-white night-grid",
+    night: "on-night bg-night text-white",
     tint: "bg-green-tint",
     stone: "bg-stone",
   };
@@ -87,7 +80,7 @@ export function PageHeader({ title, intro, aside }: { title: React.ReactNode; in
 /* ---------- Status ---------- */
 
 export function LiveDot({ tone = "glow" }: { tone?: "glow" | "green" | "oxblood" | "muted" }) {
-  const c = { glow: "bg-glow animate-livedot", green: "bg-green", oxblood: "bg-oxblood", muted: "bg-muted/50" }[tone];
+  const c = { glow: "bg-glow", green: "bg-green", oxblood: "bg-oxblood", muted: "bg-muted/50" }[tone];
   return <span aria-hidden className={`inline-block h-2 w-2 shrink-0 rounded-full ${c}`} />;
 }
 
@@ -165,7 +158,7 @@ export function CountdownRing({ to, total, label, onNight = false, size = 168 }:
       </svg>
       <div>
         <p className={`text-[14px] ${onNight ? "text-white/60" : "text-muted"}`}>{label}</p>
-        <p className="mt-1 font-mono text-[34px] leading-none tracking-tight tabular-nums sm:text-[44px]">{!now ? "…" : left > 0 ? formatRemaining(left) : "Now"}</p>
+        <p className="mt-1 text-[34px] font-semibold leading-none tracking-[-0.03em] tabular-nums sm:text-[44px]">{!now ? "…" : left > 0 ? formatRemaining(left) : "Now"}</p>
         <p className={`mt-2 text-[14px] ${onNight ? "text-white/60" : "text-muted"}`}>{fmtDate(to)}</p>
       </div>
     </div>
@@ -180,7 +173,7 @@ export function Countdown({ to, label }: { to?: number; label: string }) {
   return (
     <div>
       <p className="text-[14px] text-muted">{label}</p>
-      <p className="mt-1 font-mono text-[32px] leading-none tracking-tight tabular-nums sm:text-[40px]">{!now ? "…" : left > 0 ? formatRemaining(left) : "Now"}</p>
+      <p className="mt-1 text-[32px] font-semibold leading-none tracking-[-0.03em] tabular-nums sm:text-[40px]">{!now ? "…" : left > 0 ? formatRemaining(left) : "Now"}</p>
       <p className="mt-2 text-[14px] text-muted">{fmtDate(to)}</p>
     </div>
   );
@@ -230,19 +223,25 @@ export function Field({ label, hint, error, children, optional }: { label: strin
   );
 }
 
-export const inputCls = "w-full rounded-[var(--radius-field)] border border-line bg-surface px-3.5 py-3 text-[15px] outline-none transition-colors placeholder:text-muted/60 focus:border-green aria-[invalid=true]:border-oxblood";
+
+/* ---------- Layout ---------- */
+
+/** The one grid: header, sections and footer all share these edges. */
+export function Container({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <div className={`${containerCls} ${className}`}>{children}</div>;
+}
 
 /* ---------- App page container ---------- */
 
 export function AppMain({ children, width = "wide" }: { children: React.ReactNode; width?: "wide" | "narrow" }) {
   return (
-    <main className={`mx-auto w-full px-[var(--inset)] pb-6 pt-8 sm:pt-12 ${width === "wide" ? "max-w-6xl" : "max-w-3xl"}`}>
-      <div className="space-y-5">{children}</div>
+    <main className={`${containerCls} pb-6 pt-8 sm:pt-12`}>
+      <div className={`space-y-5 ${width === "narrow" ? "max-w-[880px]" : ""}`}>{children}</div>
     </main>
   );
 }
 
 /** Dark hero panel for app screens (status, inheritance). */
 export function NightPanel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <section className={`on-night relative overflow-hidden rounded-[var(--radius-slab)] bg-night p-6 text-white night-grid sm:p-9 ${className}`}>{children}</section>;
+  return <section className={`on-night relative overflow-hidden rounded-[var(--radius-slab)] bg-night p-6 text-white sm:p-10 ${className}`}>{children}</section>;
 }
