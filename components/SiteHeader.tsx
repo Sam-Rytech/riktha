@@ -3,7 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import ConnectButton from "./ConnectButton";
 
 const NAV = [
@@ -13,13 +13,28 @@ const NAV = [
   { href: "/settings", label: "Settings" },
 ];
 
-export function Wordmark({ className = "", letter = "var(--stone)" }: { className?: string; letter?: string }) {
+/**
+ * The Handover mark: a solid dot (the owner) overlapped by a ring (the heir) of the same outer size. A thin gap is
+ * cut from the dot where the ring crosses it, so the two shapes stay distinct at any size and in any colour.
+ */
+export function Mark({ size = 22, ring = "var(--green)", className = "" }: { size?: number; ring?: string; className?: string }) {
+  const gap = useId();
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden className={className}>
+      <mask id={gap}>
+        <rect width="24" height="24" fill="white" />
+        <circle cx="15.25" cy="12" r="5.4" fill="none" stroke="black" strokeWidth="5" />
+      </mask>
+      <circle cx="8.75" cy="12" r="6.75" fill="currentColor" mask={`url(#${gap})`} />
+      <circle cx="15.25" cy="12" r="5.4" fill="none" stroke={ring} strokeWidth="2.7" />
+    </svg>
+  );
+}
+
+export function Wordmark({ className = "", ring }: { className?: string; ring?: string }) {
   return (
     <span className={`inline-flex items-center gap-2 ${className}`}>
-      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden>
-        <rect width="24" height="24" rx="7" fill="currentColor" />
-        <path d="M8 18V6h4.6c2.5 0 4 1.4 4 3.5 0 1.6-.9 2.8-2.4 3.2L17 18h-2.8l-2.5-5H10.5v5zm2.5-7.1h2c1.1 0 1.7-.5 1.7-1.4s-.6-1.4-1.7-1.4h-2z" fill={letter} />
-      </svg>
+      <Mark ring={ring} />
       <span className="text-[19px] font-semibold tracking-[-0.03em]">Riktha</span>
     </span>
   );
@@ -69,7 +84,7 @@ export default function SiteHeader() {
         ? "mx-auto flex max-w-6xl items-center justify-between gap-3 px-6 py-2 text-white sm:px-10"
         : "mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full border border-line bg-surface/85 px-3 py-2 pl-4 shadow-[0_8px_30px_-12px_rgba(13,20,17,0.18)] backdrop-blur-xl"}>
         <Link href="/" className={inHero ? "text-white" : "text-ink"} aria-label="Riktha home">
-          <Wordmark letter={inHero ? "var(--night)" : "var(--stone)"} />
+          <Wordmark ring={inHero ? "var(--glow)" : "var(--green)"} />
         </Link>
         <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
           {NAV.map((n) => (
