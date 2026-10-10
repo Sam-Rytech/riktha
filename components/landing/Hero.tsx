@@ -19,8 +19,8 @@ export default function Hero() {
   const t = useLoop(sceneRef, 13000, { still: 0.92 });
 
   return (
-    <Slab tone="night" className="relative mt-[var(--inset)] overflow-hidden">
-      <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-6 pb-36 pt-14 sm:px-10 sm:pb-48 lg:grid-cols-[1.05fr_1fr] lg:pt-20">
+    <Slab id="hero" tone="night" className="relative mt-[var(--inset)] overflow-hidden">
+      <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-6 pb-36 pt-28 sm:px-10 sm:pb-48 lg:grid-cols-[1.05fr_1fr] lg:pt-36">
         <div>
           <motion.div {...rise(0, reduce)}><Tag tone="night">Live on Stellar testnet</Tag></motion.div>
           <motion.h1 {...rise(1, reduce)} className="display mt-6 text-[44px] sm:text-[64px] lg:text-[76px]">
@@ -31,9 +31,9 @@ export default function Hero() {
             Sign once. If you ever stop using your Stellar account, the network itself hands it to the person you chose, after
             a warning you can cancel with one click.
           </motion.p>
-          <motion.div {...rise(3, reduce)} className="mt-8 flex flex-wrap gap-3">
-            <Link href="/plan/new" className={btn.light}>Create your plan</Link>
-            <Link href="/claim" className={btn.ghostNight}>I received a packet</Link>
+          <motion.div {...rise(3, reduce)} className="mt-8 flex flex-wrap gap-4">
+            <Link href="/plan/new" className={`${btn.light} w-full sm:w-auto`}>Create your plan</Link>
+            <Link href="/claim" className={`${btn.ghostNight} w-full sm:w-auto`}>I received a packet</Link>
           </motion.div>
           <motion.ul {...rise(4, reduce)} className="mt-8 grid max-w-md grid-cols-3 gap-3 text-[13px] text-white/60">
             {["No custodian", "No shared seed phrase", "No smart contract to trust"].map((x) => (
@@ -56,7 +56,7 @@ export default function Hero() {
         </motion.div>
       </div>
 
-      <p aria-hidden className="pointer-events-none absolute inset-x-0 -bottom-[0.18em] select-none text-center font-semibold leading-none tracking-[0.18em] text-white/[0.055] [font-size:clamp(84px,19vw,280px)]">
+      <p aria-hidden className="pointer-events-none absolute inset-x-0 -bottom-[0.18em] select-none pl-[0.18em] text-center font-semibold leading-none tracking-[0.18em] text-white/[0.055] [font-size:clamp(84px,19vw,280px)]">
         RIKTHA
       </p>
     </Slab>

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { btn, Slab } from "../ui";
+import { btn } from "../styles";
+import { Slab } from "../ui";
 
 const LIMITS = [
   ["It isn't a legal will.", "Your heir may still need probate. Riktha is the technical half that pairs with one."],
@@ -70,12 +71,12 @@ export function FinalCta() {
       <div className="relative mx-auto max-w-6xl px-6 pb-40 pt-20 text-center sm:px-10 sm:pb-56 sm:pt-28">
         <h2 className="display mx-auto max-w-3xl text-[40px] sm:text-[64px]">Sign once. Then get on with your life.</h2>
         <p className="mx-auto mt-5 max-w-xl text-[17px] leading-relaxed text-white/65">It takes about two minutes and one signature. You can change or cancel it any time.</p>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Link href="/plan/new" className={btn.light}>Create your plan</Link>
-          <Link href="/evidence" className={btn.ghostNight}>See it proven on testnet</Link>
+        <div className="mt-10 flex flex-wrap justify-center gap-4">
+          <Link href="/plan/new" className={`${btn.light} w-full max-w-xs sm:w-auto`}>Create your plan</Link>
+          <Link href="/evidence" className={`${btn.ghostNight} w-full max-w-xs sm:w-auto`}>See it proven on testnet</Link>
         </div>
       </div>
-      <p aria-hidden className="pointer-events-none absolute inset-x-0 -bottom-[0.18em] select-none text-center font-semibold leading-none tracking-[0.18em] text-white/[0.055] [font-size:clamp(84px,19vw,280px)]">RIKTHA</p>
+      <p aria-hidden className="pointer-events-none absolute inset-x-0 -bottom-[0.18em] select-none pl-[0.18em] text-center font-semibold leading-none tracking-[0.18em] text-white/[0.055] [font-size:clamp(84px,19vw,280px)]">RIKTHA</p>
     </Slab>
   );
 }

@@ -5,6 +5,7 @@
 //
 // Usage: node scripts/qa-shots.mjs <url> <out_dir> [width x height ...]
 //   e.g. node scripts/qa-shots.mjs http://localhost:3000/ shots 1440x900 768x1024 390x844
+//   --at=<y>  also capture one viewport frame scrolled to y (<w>-at<y>.png), for scroll-dependent UI like a sticky nav
 // Writes <out_dir>/<w>-full.png and <w>-00.png, <w>-01.png … (each exactly w x h), plus <w>-check.json
 // with the measured left edges (header logo, headings, footer) for the alignment check.
 import { spawn } from "node:child_process";
@@ -13,7 +14,9 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 
 const CHROME = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
-const [url, out, ...sizes] = process.argv.slice(2);
+const args = process.argv.slice(2);
+const at = args.filter((a) => a.startsWith("--at=")).map((a) => Number(a.slice(5)));
+const [url, out, ...sizes] = args.filter((a) => !a.startsWith("--"));
 const viewports = (sizes.length ? sizes : ["1440x900", "768x1024", "390x844"]).map((s) => s.split("x").map(Number));
 mkdirSync(out, { recursive: true });
 
@@ -75,6 +78,11 @@ for (const [w, h] of viewports) {
   const full = join(out, `${w}-full.png`);
   writeFileSync(full, Buffer.from(shot.data, "base64"));
   writeFileSync(join(out, `${w}-check.json`), JSON.stringify(check, null, 2));
+  for (const y of at) {
+    await evaluate(`(async () => { scrollTo(0, ${y}); await new Promise(r => setTimeout(r, 900)); return true; })()`);
+    const v = await send("Page.captureScreenshot", { format: "png" });
+    writeFileSync(join(out, `${w}-at${y}.png`), Buffer.from(v.data, "base64"));
+  }
   console.log(`${w}x${h}: page ${pageH}px, scrollWidth ${check.scrollWidth}, logo ${check.logo}, footer ${check.footer}, headings ${[...new Set(check.heads.map((x) => x.left))].join("/")}`);
 }
 

@@ -152,6 +152,11 @@ body {
 @utility animate-breathe { animation: breathe 6s ease-in-out infinite; }
 @utility animate-marquee { animation: marquee 40s linear infinite; }
 @utility animate-livedot { animation: livedot 2s ease-out infinite; }
+@keyframes nav-in {
+  from { transform: translateY(-110%); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@utility animate-nav-in { animation: nav-in 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
