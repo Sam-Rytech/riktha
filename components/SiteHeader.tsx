@@ -25,9 +25,8 @@ export function Wordmark({ className = "", letter = "var(--stone)" }: { classNam
 }
 
 /**
- * Always fixed. On a page with a `#hero` slab it wears the hero's dark look while over the hero (gaining a dark
- * frosted backing once scrolled, so it stays legible over hero content); once the hero is gone the light pill
- * slides in. Elsewhere the light pill is always shown.
+ * Always fixed. On a page with a `#hero` slab it keeps its transparent in-hero look while over the hero; once the
+ * hero is gone the light pill slides in. Elsewhere the light pill is always shown.
  * The header is always out of flow; the layout's spacer reserves its height on pages without a hero.
  */
 export default function SiteHeader() {
@@ -35,14 +34,13 @@ export default function SiteHeader() {
   const [open, setOpen] = useState(false);
   const [pastHero, setPastHero] = useState(false);
   const [hasHero, setHasHero] = useState(path === "/");
-  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => setOpen(false), [path]);
   useEffect(() => {
     const hero = document.getElementById("hero");
     setHasHero(!!hero);
     if (!hero) return;
-    const on = () => { setPastHero(hero.getBoundingClientRect().bottom < 80); setScrolled(window.scrollY > 24); };
+    const on = () => setPastHero(hero.getBoundingClientRect().bottom < 80);
     on();
     window.addEventListener("scroll", on, { passive: true });
     window.addEventListener("resize", on);
@@ -60,10 +58,10 @@ export default function SiteHeader() {
   return (
     <header
       className={inHero
-        ? `fixed inset-x-0 top-0 z-40 px-[var(--inset)] transition-[padding] duration-300 ${scrolled ? "pt-[var(--inset)]" : "pt-[calc(var(--inset)+12px)]"}`
+        ? "fixed inset-x-0 top-0 z-40 px-[var(--inset)] pt-[calc(var(--inset)+12px)]"
         : `fixed inset-x-0 top-0 z-40 px-[var(--inset)] pt-[var(--inset)] ${hasHero ? "animate-nav-in" : ""}`}>
       <div className={inHero
-        ? `mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full border py-2 text-white transition-[background,border-color,padding] duration-300 ${scrolled ? "border-white/10 bg-night/80 px-3 pl-4 backdrop-blur-xl" : "border-transparent px-6 sm:px-10"}`
+        ? "mx-auto flex max-w-6xl items-center justify-between gap-3 px-6 py-2 text-white sm:px-10"
         : "mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full border border-line bg-surface/85 px-3 py-2 pl-4 shadow-[0_8px_30px_-12px_rgba(13,20,17,0.18)] backdrop-blur-xl"}>
         <Link href="/" className={inHero ? "text-white" : "text-ink"} aria-label="Riktha home">
           <Wordmark letter={inHero ? "var(--night)" : "var(--stone)"} />
