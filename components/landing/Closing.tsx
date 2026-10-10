@@ -76,7 +76,7 @@ export function FinalCta() {
           <Link href="/evidence" className={`${btn.ghostNight} w-full max-w-xs sm:w-auto`}>See it proven on testnet</Link>
         </div>
       </div>
-      <p aria-hidden className="pointer-events-none absolute inset-x-0 -bottom-[0.18em] select-none pl-[0.18em] text-center font-semibold leading-none tracking-[0.18em] text-white/[0.055] [font-size:clamp(84px,19vw,280px)]">RIKTHA</p>
+      <p aria-hidden className="pointer-events-none absolute -bottom-[0.18em] left-1/2 -translate-x-1/2 select-none whitespace-nowrap pl-[0.18em] font-semibold leading-none tracking-[0.18em] text-white/[0.055] [font-size:clamp(40px,18vw,280px)]">RIKTHA</p>
     </Slab>
   );
 }

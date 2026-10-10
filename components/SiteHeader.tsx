@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -54,6 +55,10 @@ export default function SiteHeader() {
   }, [open]);
 
   const inHero = hasHero && !pastHero;
+  const reduce = useReducedMotion();
+  // The sheet grows out of the menu button and shrinks back into it: the transform origin is the button's centre,
+  // 36px above the sheet and --mx in from its right edge (pill: 12px padding + 20px; in-hero: 24/40px + 20px).
+  const closed = reduce ? { opacity: 0 } : { opacity: 0, scale: 0.15, filter: "blur(6px)", transition: { duration: 0.28, ease: [0.4, 0, 1, 1] as const } };
 
   return (
     <header
@@ -87,16 +92,22 @@ export default function SiteHeader() {
           </button>
         </div>
       </div>
-      {open && (
-        <div id="mobile-menu" className="mx-auto mt-2 max-w-6xl rounded-[var(--radius-slab)] border border-line bg-surface p-3 text-ink shadow-[0_20px_50px_-20px_rgba(13,20,17,0.3)] lg:hidden">
-          <nav aria-label="Mobile" className="flex flex-col">
-            {NAV.map((n) => (
-              <Link key={n.href} href={n.href} className="rounded-2xl px-4 py-3.5 text-[17px] hover:bg-stone">{n.label}</Link>
-            ))}
-          </nav>
-          <div className="border-t border-line p-3 sm:hidden"><ConnectButton /></div>
-        </div>
-      )}
+      <AnimatePresence>
+        {open && (
+          <motion.div key="menu" id="mobile-menu" initial={closed} animate={{ opacity: 1, scale: 1, filter: "blur(0px)", transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }} exit={closed} style={{ transformOrigin: "calc(100% - var(--mx)) -36px" }}
+            className={`mx-auto mt-2 max-w-6xl rounded-[var(--radius-slab)] border border-line bg-surface p-3 text-ink shadow-[0_20px_50px_-20px_rgba(13,20,17,0.3)] lg:hidden ${inHero ? "[--mx:44px] sm:[--mx:60px]" : "[--mx:32px]"}`}>
+            <motion.nav aria-label="Mobile" className="flex flex-col" initial="hide" animate="show" exit="hide"
+              variants={{ show: { transition: { staggerChildren: 0.04, delayChildren: 0.08 } }, hide: { transition: { staggerChildren: 0.02, staggerDirection: -1 } } }}>
+              {NAV.map((n) => (
+                <motion.div key={n.href} variants={{ hide: { opacity: 0, y: reduce ? 0 : -6 }, show: { opacity: 1, y: 0 } }}>
+                  <Link href={n.href} className="block rounded-2xl px-4 py-3.5 text-[17px] hover:bg-stone">{n.label}</Link>
+                </motion.div>
+              ))}
+            </motion.nav>
+            <div className="border-t border-line p-3 sm:hidden"><ConnectButton /></div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
