@@ -14,10 +14,10 @@ Status keys: ⬜ todo · 🟨 in progress · ✅ done · ⛔ blocked · ✂️ c
 
 | | |
 |---|---|
-| Phase | Build complete; next: deploy, account wiring and full testing with Sam |
-| Next action | Sam reviews the redesign on production + tests the claim kit; then plan + record the video; then submit |
+| Phase | Built, deployed and polished (redesign 1 + nav, footer, logo, privacy) |
+| Next action | Sam does a final production test (claim kit + phone); plan + record the video; make the repo public; submit |
 | Blockers | none |
-| Last updated | 2026-10-08 |
+| Last updated | 2026-10-10 |
 
 ---
 
