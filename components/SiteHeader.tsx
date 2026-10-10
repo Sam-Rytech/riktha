@@ -19,8 +19,9 @@ const NAV = [
  */
 export function Mark({ size = 22, ring = "var(--green)", className = "" }: { size?: number; ring?: string; className?: string }) {
   const gap = useId();
+  // The viewBox is cropped to the mark itself (20 x 13.5), so `size` is its real height.
   return (
-    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden className={className}>
+    <svg viewBox="2 5.25 20 13.5" width={Math.round((size * 20) / 13.5)} height={size} aria-hidden className={className}>
       <mask id={gap}>
         <rect width="24" height="24" fill="white" />
         <circle cx="15.25" cy="12" r="5.4" fill="none" stroke="black" strokeWidth="5" />
