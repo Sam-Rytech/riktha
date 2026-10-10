@@ -1,8 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // No floating dev badge: it lands in QA screenshots and screen recordings.
-  devIndicators: false,
+  /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

@@ -12,7 +12,7 @@ interface Contact {
 
 export default function SettingsPage() {
   return (
-    <main className="mx-auto w-full max-w-[1200px] space-y-5 px-6 pb-6 pt-8 sm:px-10 sm:pt-12 *:max-w-3xl">
+    <main className="mx-auto w-full max-w-3xl space-y-5 px-[var(--inset)] pb-6 pt-8 sm:pt-12">
       <AuthGate title="Notification settings" intro="Sign in to choose where Riktha sends reminders and alerts.">
         {() => <Settings />}
       </AuthGate>

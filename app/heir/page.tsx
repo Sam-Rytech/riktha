@@ -11,7 +11,7 @@ import { formatDuration } from "@/lib/core/eligibility";
 
 export default function HeirPage() {
   return (
-    <main className="mx-auto w-full max-w-[1200px] space-y-5 px-6 pb-6 pt-8 sm:px-10 sm:pt-12 *:max-w-3xl">
+    <main className="mx-auto w-full max-w-3xl space-y-5 px-[var(--inset)] pb-6 pt-8 sm:pt-12">
       <AuthGate title="Plans naming you" intro="Sign in with the account an owner named as their heir.">
         {() => <Heir />}
       </AuthGate>

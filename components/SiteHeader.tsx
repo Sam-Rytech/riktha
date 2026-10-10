@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import ConnectButton from "./ConnectButton";
-import { containerCls } from "./ui";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard" },
@@ -46,13 +45,13 @@ export default function SiteHeader() {
   }, [open]);
 
   return (
-    <header className={`sticky top-0 z-40 border-b transition-[background,border-color] duration-300 ${scrolled || open ? "border-line bg-stone/90 backdrop-blur-xl" : "border-transparent bg-stone"}`}>
-      <div className={`${containerCls} flex h-16 items-center justify-between gap-3`}>
+    <header className="sticky top-0 z-40 px-[var(--inset)] pt-[var(--inset)]">
+      <div className={`mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full border px-3 py-2 pl-4 transition-[background,border-color,box-shadow] duration-300 ${scrolled || open ? "border-line bg-surface/80 shadow-[0_8px_30px_-12px_rgba(13,20,17,0.18)] backdrop-blur-xl" : "border-transparent bg-surface/40 backdrop-blur-md"}`}>
         <Link href="/" className="text-ink" aria-label="Riktha home"><Wordmark /></Link>
         <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
           {NAV.map((n) => (
             <Link key={n.href} href={n.href} aria-current={path === n.href ? "page" : undefined}
-              className={`rounded-full px-3.5 py-2 text-[14px] transition-colors ${path === n.href ? "bg-surface text-ink shadow-[inset_0_0_0_1px_var(--line)]" : "text-ink/70 hover:text-ink"}`}>
+              className={`rounded-full px-3.5 py-2 text-[14px] transition-colors ${path === n.href ? "bg-ink text-white" : "text-ink/75 hover:bg-ink/5 hover:text-ink"}`}>
               {n.label}
             </Link>
           ))}
@@ -69,15 +68,13 @@ export default function SiteHeader() {
         </div>
       </div>
       {open && (
-        <div id="mobile-menu" className={`${containerCls} pb-4 lg:hidden`}>
-          <div className="rounded-[var(--radius-card)] border border-line bg-surface p-2">
+        <div id="mobile-menu" className="mx-auto mt-2 max-w-6xl rounded-[var(--radius-slab)] border border-line bg-surface p-3 shadow-[0_20px_50px_-20px_rgba(13,20,17,0.3)] lg:hidden">
           <nav aria-label="Mobile" className="flex flex-col">
             {NAV.map((n) => (
-              <Link key={n.href} href={n.href} className="rounded-xl px-4 py-3.5 text-[17px] hover:bg-stone">{n.label}</Link>
+              <Link key={n.href} href={n.href} className="rounded-2xl px-4 py-3.5 text-[17px] hover:bg-stone">{n.label}</Link>
             ))}
           </nav>
           <div className="border-t border-line p-3 sm:hidden"><ConnectButton /></div>
-          </div>
         </div>
       )}
     </header>

@@ -189,7 +189,8 @@ Setup, packet, dashboard countdown, check-in, cancel, heir claim, `/claim` packe
 
 ## Daily log
 
-### 2026-10-10: redesign pass 2 (de-slop)
+### 2026-10-10: redesign pass 2 (de-slop) — reverted
+- Sam preferred the first redesign, so pass 2 (fe9ea85) was reverted. The QA scripts and these notes were kept.
 - Sam: pass 1 "still has an AI slop feel". Removed the glowing grid sections, serif italic accents, count-ups, marquee, "Live" pills and the wireframe protocol diagram.
 - One grid: every section, the header and the footer share `containerCls` (max 1200 px; 24/40 px gutters). Measured left edges match at 1440 / 768 / 390.
 - Landing: hero with a real dashboard slice; flat statement; a timeline "How it works"; the Owner/Heir preview; claim-kit steps; one flat ink protocol slab with an evidence table; limits plus Q&A; a green-tint CTA. Mobile gets stacked lists instead of tables.
