@@ -217,9 +217,9 @@ export default function NewPlan() {
                       <span className="mt-1.5 flex gap-2">
                         <input type="number" inputMode="numeric" min={1} step={1} value={custom[v]}
                           onChange={(e) => setCustom((c) => ({ ...c, [v]: e.target.value }))}
-                          className={inputCls + " min-w-0 flex-1"} aria-label={`${label} (number)`} />
+                          className={inputCls + " w-0 min-w-0 flex-[2] font-mono"} aria-label={`${label} (number)`} />
                         <select value={custom[u]} onChange={(e) => setCustom((c) => ({ ...c, [u]: Number(e.target.value) }))}
-                          className={inputCls + " w-auto"} aria-label={`${label} (unit)`} disabled={UNITS.length === 1}>
+                          className={inputCls + " w-0 min-w-0 flex-[3]"} aria-label={`${label} (unit)`} disabled={UNITS.length === 1}>
                           {UNITS.map(([n, sec]) => <option key={n} value={sec}>{n}</option>)}
                         </select>
                       </span>
