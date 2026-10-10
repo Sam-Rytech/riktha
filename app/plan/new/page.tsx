@@ -154,35 +154,6 @@ export default function NewPlan() {
                 <span className="mt-1 block text-[14px] text-muted">{desc}</span>
               </label>
             ))}
-            <div className={`rounded-[var(--radius-card)] border-2 p-5 transition-colors sm:col-span-2 ${preset === "custom" ? "border-green bg-green-tint" : "border-line hover:border-ink/30"}`}>
-              <label className="flex cursor-pointer items-center justify-between">
-                <input type="radio" name="preset" value="custom" aria-label="Custom" checked={preset === "custom"} onChange={() => setPreset("custom")} className="sr-only" />
-                <span className="font-medium">Custom</span>
-                <span aria-hidden className={`h-4 w-4 rounded-full border ${preset === "custom" ? "border-[6px] border-green" : "border-line"}`} />
-              </label>
-              <span className="mt-1 block text-[14px] text-muted">Choose exactly how long to wait, and how long you get to respond.</span>
-              {preset === "custom" && (
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  {([["Wait this long", "i", "iUnit"], ["Then time to respond", "g", "gUnit"]] as const).map(([label, v, u]) => (
-                    <label key={v} className="block text-[14px]">
-                      <span className="font-medium">{label}</span>
-                      <span className="mt-1.5 flex gap-2">
-                        <input type="number" inputMode="numeric" min={1} step={1} value={custom[v]}
-                          onChange={(e) => setCustom((c) => ({ ...c, [v]: e.target.value }))}
-                          className={inputCls + " min-w-0 flex-1"} aria-label={`${label} (number)`} />
-                        <select value={custom[u]} onChange={(e) => setCustom((c) => ({ ...c, [u]: Number(e.target.value) }))}
-                          className={inputCls + " w-auto"} aria-label={`${label} (unit)`} disabled={UNITS.length === 1}>
-                          {UNITS.map(([n, sec]) => <option key={n} value={sec}>{n}</option>)}
-                        </select>
-                      </span>
-                    </label>
-                  ))}
-                  {windowErrors.length > 0 && (
-                    <ul role="alert" className="space-y-1 text-[14px] text-oxblood sm:col-span-2">{windowErrors.map((m) => <li key={m}>{m}</li>)}</ul>
-                  )}
-                </div>
-              )}
-            </div>
           </fieldset>
 
           {heirKind === "wallet" && (
@@ -231,6 +202,35 @@ export default function NewPlan() {
                 </span>
               </label>
             ))}
+            <div className={`rounded-[var(--radius-card)] border-2 p-5 transition-colors sm:col-span-2 ${preset === "custom" ? "border-green bg-green-tint" : "border-line hover:border-ink/30"}`}>
+              <label className="flex cursor-pointer items-center justify-between">
+                <input type="radio" name="preset" value="custom" aria-label="Custom" checked={preset === "custom"} onChange={() => setPreset("custom")} className="sr-only" />
+                <span className="font-medium">Custom</span>
+                <span aria-hidden className={`h-4 w-4 rounded-full border ${preset === "custom" ? "border-[6px] border-green" : "border-line"}`} />
+              </label>
+              <span className="mt-1 block text-[14px] text-muted">Choose exactly how long to wait, and how long you get to respond.</span>
+              {preset === "custom" && (
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  {([["Wait this long", "i", "iUnit"], ["Then time to respond", "g", "gUnit"]] as const).map(([label, v, u]) => (
+                    <label key={v} className="block text-[14px]">
+                      <span className="font-medium">{label}</span>
+                      <span className="mt-1.5 flex gap-2">
+                        <input type="number" inputMode="numeric" min={1} step={1} value={custom[v]}
+                          onChange={(e) => setCustom((c) => ({ ...c, [v]: e.target.value }))}
+                          className={inputCls + " min-w-0 flex-1"} aria-label={`${label} (number)`} />
+                        <select value={custom[u]} onChange={(e) => setCustom((c) => ({ ...c, [u]: Number(e.target.value) }))}
+                          className={inputCls + " w-auto"} aria-label={`${label} (unit)`} disabled={UNITS.length === 1}>
+                          {UNITS.map(([n, sec]) => <option key={n} value={sec}>{n}</option>)}
+                        </select>
+                      </span>
+                    </label>
+                  ))}
+                  {windowErrors.length > 0 && (
+                    <ul role="alert" className="space-y-1 text-[14px] text-oxblood sm:col-span-2">{windowErrors.map((m) => <li key={m}>{m}</li>)}</ul>
+                  )}
+                </div>
+              )}
+            </div>
           </fieldset>
           {windowErrors.length === 0 && <div className="rounded-[var(--radius-card)] bg-stone p-5 text-[15px] leading-relaxed">
             <p><b>If you send nothing from this account for {formatDuration(I)}</b>, a claim can start. We alert you by email, Telegram and the dashboard.</p>
