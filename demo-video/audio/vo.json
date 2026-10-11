@@ -1,0 +1,120 @@
+{
+ "dur": 100.974,
+ "lead": 0.4,
+ "lines": [
+  {
+   "i": 1,
+   "text": "Lost keys. Lost forever.",
+   "start": 0.4,
+   "end": 2.087
+  },
+  {
+   "i": 2,
+   "text": "An estimated two to almost four million bitcoin are gone for good, because their keys were lost.",
+   "start": 2.437,
+   "end": 7.746
+  },
+  {
+   "i": 3,
+   "text": "Stellar now holds nearly four billion dollars in tokenized assets, yet the inheritance tools built for Bitcoin and Ethereum don't work on Stellar.",
+   "start": 8.096,
+   "end": 16.446
+  },
+  {
+   "i": 4,
+   "text": "This is Riktha. Name an heir for your Stellar account, and sign once.",
+   "start": 16.796,
+   "end": 20.709
+  },
+  {
+   "i": 5,
+   "text": "Your heir doesn't need crypto. Just their email address.",
+   "start": 21.059,
+   "end": 24.418
+  },
+  {
+   "i": 6,
+   "text": "Choose how long Riktha waits. Six months, a year, or exactly what you want.",
+   "start": 24.768,
+   "end": 29.969
+  },
+  {
+   "i": 7,
+   "text": "Then you sign one transaction in Freighter. That's the whole setup.",
+   "start": 30.319,
+   "end": 33.923
+  },
+  {
+   "i": 8,
+   "text": "From now on, you live normally. Every transaction you send resets the clock.",
+   "start": 34.273,
+   "end": 38.749
+  },
+  {
+   "i": 9,
+   "text": "Or just press \"I'm alive\".",
+   "start": 39.099,
+   "end": 40.567
+  },
+  {
+   "i": 10,
+   "text": "Go quiet for the whole window, and a claim starts. But you're warned long before it does.",
+   "start": 40.917,
+   "end": 45.923
+  },
+  {
+   "i": 11,
+   "text": "By email, on Telegram, and on your dashboard. One transaction from you cancels the claim.",
+   "start": 46.273,
+   "end": 51.879
+  },
+  {
+   "i": 12,
+   "text": "If you never respond, your heir gets an email.",
+   "start": 52.229,
+   "end": 54.86
+  },
+  {
+   "i": 13,
+   "text": "They open the link, type the six words you left them, and the account is theirs.",
+   "start": 55.21,
+   "end": 59.6
+  },
+  {
+   "i": 14,
+   "text": "No wallet. No seed phrase. They send the funds anywhere, even straight to an exchange.",
+   "start": 59.95,
+   "end": 65.237
+  },
+  {
+   "i": 15,
+   "text": "Here's how. At setup, you pre-sign two transactions with Stellar's built-in time conditions.",
+   "start": 65.587,
+   "end": 71.799
+  },
+  {
+   "i": 16,
+   "text": "The network rejects them until you've been silent long enough. And anything you send uses up their sequence number, so they can never run.",
+   "start": 72.149,
+   "end": 79.409
+  },
+  {
+   "i": 17,
+   "text": "Riktha never holds a key. The handover is enforced by the network, not by our servers.",
+   "start": 79.759,
+   "end": 85.412
+  },
+  {
+   "i": 18,
+   "text": "We ran ten real scenarios on Stellar testnet. All ten pass, including an early claim, rejected by the network itself.",
+   "start": 85.762,
+   "end": 93.196
+  },
+  {
+   "i": 19,
+   "text": "Riktha. Name an heir. Sign once. The network keeps your promise. Riktha dot vercel dot app.",
+   "start": 93.546,
+   "end": 100.674
+  }
+ ]
+}

@@ -1,0 +1,504 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Riktha: The Handover</title>
+<style>
+  @font-face { font-family: "Instrument Sans"; src: url(assets/fonts/InstrumentSans.woff2) format("woff2"); font-weight: 400 700; }
+  @font-face { font-family: "Geist Mono"; src: url(assets/fonts/GeistMono.woff2) format("woff2"); font-weight: 100 900; }
+  html, body { margin: 0; background: #0D1411; overflow: hidden; }
+  canvas { display: block; max-width: 100vw; max-height: 100vh; margin: auto; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script type="module">
+// Render contract: window.seek(t) paints the exact frame for time t. Nothing depends on a clock.
+// Direction "The Handover": the logo's dot (owner) and ring (heir) are one continuous shape.
+import { clamp, remap, mix, spring, sp, track, track2, rng, layout, sceneRunner } from './lib/motion.js';
+import { rrect, cursor, ripple, text, kinetic, shadow } from './lib/draw.js';
+
+// ---------- FILM CONFIG ----------
+const FILM = {
+  name: 'Riktha',
+  url: 'riktha.vercel.app',
+  palette: {
+    bg: '#0D1411', bg2: '#141D19', ink: '#F2F5F3', mute: '#8FA39A', dim: '#3A4A43',
+    accent: '#4FD08F', green: '#1C4A34', danger: '#E5484D',
+  },
+  fonts: { display: '"Instrument Sans", system-ui, sans-serif', mono: '"Geist Mono", ui-monospace, monospace' },
+  assets: {
+    hero: 'assets/screens/01-landing-hero.png',
+    heir0: 'assets/screens/10-wizard-heir-empty.png', heir1: 'assets/screens/11-wizard-heir-filled.png',
+    time0: 'assets/screens/12-wizard-timing-180.png', time1: 'assets/screens/13-wizard-timing-custom.png',
+    review: 'assets/screens/14-wizard-review.png', code: 'assets/screens/17-review-code-ticked.png',
+    armed: 'assets/screens/20-dashboard-armed.png',
+    before: 'assets/screens/27-dashboard-before-alive.png', after: 'assets/screens/28-dashboard-after-alive.png',
+    bArmed: 'assets/screens/23-dashboardB-armed.png', notice: 'assets/screens/24-dashboardB-notice.png',
+    mailOwner: 'assets/screens/50-email-owner-notice.png', mailHeir: 'assets/screens/51-email-heir-claimable.png',
+    tg: 'assets/screens/60-telegram-alerts.png',
+    inh0: 'assets/screens/32-inherit-claimable.png', inh1: 'assets/screens/33-inherit-code-typed.png',
+    inh2: 'assets/screens/34-inherit-unlocked.png', wallet: 'assets/screens/35-inherit-wallet.png',
+    sendFilled: 'assets/screens/37-inherit-send-filled.png', sent: 'assets/screens/39-inherit-sent.png',
+    evTop: 'assets/screens/40-evidence-top.png', evFull: 'assets/screens/41-evidence-full.png',
+  },
+  tail: 4.4,                                   // seconds after the last line ends (end card hold)
+  captions: true,
+};
+// ---------------------------------
+
+const q = new URLSearchParams(location.search);
+const W = +q.get('w') || 1920, H = +q.get('h') || 1080;
+const canvas = document.getElementById('c');
+canvas.width = W; canvas.height = H;
+const g = canvas.getContext('2d');
+const L = layout(W, H);
+const P = FILM.palette, u = L.u;
+const F = (wt, px) => `${wt} ${px * u}px ${FILM.fonts.display}`;
+const M = (wt, px) => `${wt} ${px * u}px ${FILM.fonts.mono}`;
+
+const json = async (url, fallback) => { try { const r = await fetch(url); return r.ok ? await r.json() : fallback; } catch { return fallback; } };
+const image = (src) => new Promise((res) => { if (!src) return res(null); const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
+
+const VO = await json('audio/vo.json', null);
+const IMG = Object.fromEntries(await Promise.all(Object.entries(FILM.assets).map(async ([k, v]) => [k, await image(v)])));
+await Promise.all(['400', '500', '600', '700'].map((w) => document.fonts.load(`${w} 40px "Instrument Sans"`)));
+await document.fonts.load('500 40px "Geist Mono"');
+await document.fonts.ready;
+
+// ---------- timing: one scene per voiceover line ----------
+function sceneTimes(n) {
+  const lines = VO.lines;
+  const t = [0, ...lines.slice(1, n).map((l) => l.start - 0.15)];
+  return t.map((from, i) => ({ from, to: i + 1 < n ? t[i + 1] : VO.dur + FILM.tail }));
+}
+
+// ---------- shared pieces ----------
+const grainTile = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const x = c.getContext('2d'), d = x.createImageData(256, 256), r = rng(11);
+  for (let i = 0; i < d.data.length; i += 4) { const v = r() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 9; }
+  x.putImageData(d, 0, 0); return c;
+})();
+function background(t) {
+  g.fillStyle = P.bg; g.fillRect(0, 0, W, H);
+  const f = Math.floor(t * 24), r = rng(f + 1);
+  g.save(); g.translate(-r() * 256, -r() * 256);
+  g.fillStyle = g.createPattern(grainTile, 'repeat'); g.fillRect(0, 0, W + 256, H + 256);
+  g.restore();
+}
+
+// The Handover mark. s = scale: the dot's radius is 6.75*s (same geometry as components/SiteHeader.tsx Mark).
+function mark(x, y, s, { ring = 1, dx = 0, dy = 0, dot = 1, hollow = false, ringScale = 1 } = {}) {
+  const rx = x + 6.5 * s + dx, ry = y + dy, rr = 5.4 * s * ringScale, sw = 2.7 * s * ringScale;
+  if (dot > 0) { g.save(); g.globalAlpha *= dot; g.fillStyle = P.ink; g.beginPath(); g.arc(x, y, 6.75 * s, 0, Math.PI * 2); g.fill(); g.restore(); }
+  if (ring > 0) {
+    g.save(); g.globalAlpha *= ring;
+    if (!hollow && dot > 0) { g.strokeStyle = P.bg; g.lineWidth = sw + 2.3 * s; g.beginPath(); g.arc(rx, ry, rr, 0, Math.PI * 2); g.stroke(); }
+    g.strokeStyle = P.accent; g.lineWidth = hollow ? Math.max(2 * u, sw * 0.35) : sw;
+    if (hollow) g.setLineDash([10 * u, 9 * u]);
+    g.beginPath(); g.arc(rx, ry, rr, 0, Math.PI * 2); g.stroke();
+    g.restore();
+  }
+}
+
+// A camera window onto a real screenshot. cam = {cx, cy, w} in source pixels; d = destination rect.
+function camRect(img, cam, d) {
+  const w = Math.min(cam.w, img.width), h = w * d.h / d.w;
+  const x = clamp(cam.cx - w / 2, 0, img.width - w), y = clamp(cam.cy - h / 2, 0, Math.max(0, img.height - h));
+  return { x, y, w, h };
+}
+function view(img, cam, d, { r = 22, alpha = 1, shadowOn = true, clipSrc = null } = {}) {
+  if (!img) return;
+  const s = camRect(img, cam, d);
+  g.save(); g.globalAlpha *= alpha;
+  if (shadowOn) { shadow(g, true, u); g.fillStyle = '#EEEFEA'; rrect(g, d.x, d.y, d.w, d.h, r * u); g.fill(); shadow(g, false); }
+  rrect(g, d.x, d.y, d.w, d.h, r * u); g.clip();
+  if (clipSrc) {                                 // only part of this image (e.g. a field being "typed" in)
+    const m = mapper(s, d), a = m(clipSrc.x, clipSrc.y), b = m(clipSrc.x + clipSrc.w, clipSrc.y + clipSrc.h);
+    g.beginPath(); g.rect(a.x, a.y, b.x - a.x, b.y - a.y); g.clip();
+  }
+  g.drawImage(img, s.x, s.y, s.w, s.h, d.x, d.y, d.w, d.h);
+  g.restore();
+  return mapper(s, d);
+}
+const mapper = (s, d) => (px, py) => ({ x: d.x + (px - s.x) / s.w * d.w, y: d.y + (py - s.y) / s.h * d.h });
+// Floating crop of a real screenshot (a "card" lifted out of the UI).
+function crop(img, sx, sy, sw, sh, x, y, w, { r = 18, alpha = 1, rot = 0 } = {}) {
+  if (!img) return;
+  const h = w * sh / sw;
+  g.save(); g.globalAlpha *= alpha; g.translate(x + w / 2, y + h / 2); g.rotate(rot); g.translate(-w / 2, -h / 2);
+  shadow(g, true, u); g.fillStyle = '#fff'; rrect(g, 0, 0, w, h, r * u); g.fill(); shadow(g, false);
+  rrect(g, 0, 0, w, h, r * u); g.clip(); g.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+  g.restore();
+  return h;
+}
+function headline(str, x, y, t, size = 64, color = P.ink, maxW = 520) {
+  kinetic(g, str, x * u, y * u, t, { font: F(600, size), size: size * u, color, maxW: maxW * u, stagger: 0.07, lineH: 1.04 });
+}
+function label(str, x, y, { size = 22, color = P.mute, alpha = 1, font = M, align = 'left' } = {}) {
+  text(g, str, x * u, y * u, { font: font(500, size), color, alpha, align });
+}
+function pill(str, x, y, t, { color = P.accent, ink = P.bg, size = 32 } = {}) {
+  const s = sp(t, 'snappy'); if (s <= 0) return;
+  g.save(); g.font = F(600, size); const w = g.measureText(str).width + 44 * u, h = size * 1.9 * u;
+  g.globalAlpha *= clamp(s * 1.5); g.translate(x * u, y * u + (1 - s) * 18 * u);
+  g.fillStyle = color; rrect(g, 0, 0, w, h, h / 2); g.fill();
+  text(g, str, w / 2, h * 0.66, { font: F(600, size), color: ink, align: 'center' });
+  g.restore();
+}
+function click(map, sx, sy, t, tc, from) {      // cursor travels to a source point and clicks at tc
+  const p = map(sx, sy), f = from ? map(from[0], from[1]) : { x: p.x + 220 * u, y: p.y + 160 * u };
+  const c = track2(t, [[0, f.x, f.y], [Math.max(0, tc - 0.55), p.x, p.y]], 200, 26);
+  if (t < 0) return;
+  ripple(g, p.x, p.y, t - tc, P.accent, 56 * u);
+  cursor(g, c.x, c.y, 1.25 * u, clamp(1 - Math.abs(t - tc) * 9));
+}
+const D_SPLIT = { x: 600 * u, y: 60 * u, w: 1240 * u, h: 768 * u };   // panel beside a left headline
+const D_WIDE = { x: 170 * u, y: 50 * u, w: 1580 * u, h: 780 * u };    // near full-frame panel
+
+// ---------- scenes ----------
+const SHOTS = [
+  // 1. Hook: the dot slams in; "Lost keys. Lost forever."
+  (t) => {
+    const s = sp(t, 'heavy'), y = mix(-140, 445, s);
+    mark(300 * u, y * u, 11 * u, { ring: 0 });
+    kinetic(g, 'Lost keys.', 420 * u, 510 * u, t - 0.35, { font: F(700, 190), size: 190 * u, color: P.ink, stagger: 0.12 });
+    kinetic(g, 'Lost forever.', 420 * u, 710 * u, t - 1.0, { font: F(700, 190), size: 190 * u, color: P.mute, stagger: 0.12 });
+  },
+  // 2. Problem: the dot shatters into a field of coins; rows go dark as the figure counts up.
+  (t) => {
+    const cols = 16, rows = 8, gx = 1040, gy = 300, step = 50;
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      const i = r * cols + c, born = sp(t - 0.02 * (c + r), 'ui');
+      const x = mix(300, gx + c * step, born), y = mix(470, gy + r * step, born);
+      const lost = remap(t, 1.6 + c * 0.11, 2.0 + c * 0.11);
+      g.fillStyle = lost > 0.5 ? P.dim : P.ink;
+      g.globalAlpha = mix(1, 0.55, lost);
+      g.beginPath(); g.arc(x * u, y * u, mix(18, 9, born) * u, 0, Math.PI * 2); g.fill(); g.globalAlpha = 1;
+    }
+    const n = mix(2.3, 3.7, sp(t - 0.6, 'heavy'));
+    const a = clamp((t - 0.35) * 4);
+    text(g, `2.3–${n.toFixed(1)}M`, 120 * u, 470 * u, { font: F(700, 150), color: P.ink, alpha: a });
+    headline('bitcoin, gone for good', 124, 570, t - 1.0, 56, P.mute, 760);
+    label('Chainalysis estimate, via Ledger Academy', 124, 660, { size: 26, alpha: clamp((t - 1.6) * 3) });
+  },
+  // 3. Gap: the coins merge into one bar ($3.99B on Stellar); the Bitcoin/Ethereum tools don't fit the Stellar slot.
+  (t, d) => {
+    const grow = sp(t - 0.1, 'heavy');
+    g.fillStyle = P.accent; rrect(g, 120 * u, 380 * u, 820 * grow * u, 26 * u, 13 * u); g.fill();
+    const v = mix(0, 3.99, sp(t - 0.15, 'heavy'));
+    text(g, `$${v.toFixed(2)}B`, 120 * u, 340 * u, { font: F(700, 120), color: P.ink, alpha: clamp(t * 4) });
+    headline('tokenized assets on Stellar', 124, 460, t - 0.5, 40, P.mute, 900);
+    label('Cointelegraph · Stellar RWA dashboard, Aug 2026', 124, 506, { size: 24, alpha: clamp((t - 1) * 3) });
+    const groups = [['Built for Bitcoin', ['Casa', 'Unchained', 'Liana', 'Nunchuk']], ['Built for Ethereum', ['Argent', 'Sarcophagus']]];
+    const t0 = 2.6, nudge = track(t, [[0, 0], [t0 + 2.4, 70], [t0 + 2.75, 0]], 260, 16);
+    groups.forEach(([title, tools], gi) => {
+      const y = 610 + gi * 130, a = sp(t - t0 - gi * 0.25, 'snappy');
+      label(title, 124, y, { size: 28, color: P.ink, alpha: a });
+      let x = 124;
+      tools.forEach((tool, ti) => {
+        const s = sp(t - t0 - 0.15 - gi * 0.25 - ti * 0.07, 'snappy');
+        g.save(); g.font = F(600, 30); const w = g.measureText(tool).width + 40 * u;
+        g.globalAlpha = clamp(s * 1.4) * mix(1, 0.4, remap(t, t0 + 2.9, t0 + 3.4));
+        g.translate((x + nudge) * u, (y + 18 + (1 - s) * 20) * u);
+        g.strokeStyle = P.dim; g.lineWidth = 2 * u; rrect(g, 0, 0, w, 58 * u, 29 * u); g.stroke();
+        text(g, tool, w / 2, 39 * u, { font: F(600, 30), color: P.ink, align: 'center' });
+        g.restore(); x += w / u + 14;
+      });
+    });
+    const sa = sp(t - t0 - 0.6, 'ui'), bump = 1 + 0.08 * Math.sin(clamp((t - t0 - 2.4) / 0.4) * Math.PI);
+    mark(1440 * u, 690 * u, 13 * u * bump, { dot: 0, hollow: true, ring: sa, dx: 0 });
+    label('Stellar', 1524, 830, { size: 26, color: P.ink, alpha: sa, align: 'center', font: F });
+  },
+  // 4. Reveal: the hollow ring moves onto the dot. The logo forms, then the real landing page rises.
+  (t) => {
+    const lift = sp(t - 2.1, 'heavy');
+    const lx = mix(780, 170, lift), ly = mix(470, 125, lift), ls = mix(16, 4.4, lift);
+    const ringIn = sp(t - 0.15, 'ui');
+    const dot = sp(t, 'snappy');
+    // the hand-off: hollow ring from the "Stellar" slot (1524, 690) to its place on the dot
+    const rx = mix(1524, lx + 6.5 * ls, ringIn), ry = mix(690, ly, ringIn);
+    mark(lx * u, ly * u, ls * u, { dot, ring: 0 });
+    mark(lx * u, ly * u, ls * u, { dot: 0, ring: 1, dx: (rx - (lx + 6.5 * ls)) * u, dy: (ry - ly) * u, hollow: ringIn < 0.85 });
+    if (ringIn >= 0.85) mark(lx * u, ly * u, ls * u, { dot, ring: 1 });
+    const nameA = sp(t - 0.9, 'heavy');
+    g.save(); g.beginPath(); g.rect((lx + 16 * ls) * u, (ly - 12 * ls) * u, 1200 * u, 24 * ls * u); g.clip();
+    text(g, 'Riktha', (lx + 18 * ls) * u, (ly + 4.4 * ls + (1 - nameA) * 12 * ls) * u, { font: F(700, 12.5 * ls), color: P.ink });
+    g.restore();
+    if (lift > 0.01) {
+      const d = { x: 150 * u, y: mix(1080, 210, lift) * u, w: 1620 * u, h: 1012 * u };
+      view(IMG.hero, { cx: 1440, cy: 900, w: 2880 }, d, { r: 26 });
+    }
+  },
+  // 5. Heir: just an email. Cursor clicks the field; the address types in (real "filled" capture wiped in).
+  (t) => {
+    headline('Your heir needs only an email', 96, 300, t - 0.1, 64, P.ink, 470);
+    const cam = { cx: track(t, [[0, 1600], [0.9, 1700]]), cy: track(t, [[0, 900], [0.9, 1000]]), w: track(t, [[0, 2300], [0.9, 1500]]) };
+    const map = view(IMG.heir0, cam, D_SPLIT);
+    view(IMG.heir1, cam, D_SPLIT, { shadowOn: false, clipSrc: { x: 1040, y: 1190, w: 1440 * clamp((t - 1.2) / 0.9), h: 120 } });
+    view(IMG.heir1, cam, D_SPLIT, { shadowOn: false, alpha: clamp((t - 2.1) * 6) });
+    click(map, 1500, 1247, t, 1.0, [2600, 1700]);
+  },
+  // 6. Timing: camera pans the presets, cursor picks Custom, real 270 / 45 days capture lands.
+  (t) => {
+    const cam = { cx: track(t, [[0, 1840], [3.0, 1780]]), cy: track(t, [[0, 640], [1.6, 700], [3.0, 1080]]), w: track(t, [[0, 1800], [3.0, 1560]]) };
+    const map = view(IMG.time0, cam, D_WIDE);
+    view(IMG.time1, cam, D_WIDE, { shadowOn: false, alpha: clamp((t - 2.75) * 7) });
+    click(map, 1250, 940, t, 2.6, [2300, 600]);
+    pill('90 · 180 · 365 days', 170, 850, t - 0.5, { color: P.ink });
+    pill('or exactly what you want', 600, 850, t - 3.0);
+  },
+  // 7. Sign once: the three transactions lift out of the review page; then the code card and "Sign & arm".
+  (t) => {
+    const out = sp(t - 1.75, 'ui');
+    const cards = [[600, 336], [990, 330], [1374, 336]];
+    cards.forEach(([sy, sh], i) => {
+      const s = sp(t - 0.05 - i * 0.16, 'ui');
+      crop(IMG.review, 1041, sy, 1440, sh, 760 * u, (110 + i * 240 + (1 - s) * 60 + out * 260) * u, 1000 * u, { alpha: clamp(s * 1.4) * (1 - out), rot: (i - 1) * 0.012 * (1 - s) });
+    });
+    headline('One signature', 96, 300, t - 0.1, 72, P.ink, 520);
+    if (out > 0.01) {
+      const d = { x: mix(2000, 600, out) * u, y: 70 * u, w: 1240 * u, h: 775 * u };
+      const map = view(IMG.code, { cx: 1760, cy: 700, w: 1520 }, d);
+      click(map, 1432, 1100, t, 2.85, [2400, 1500]);
+    }
+  },
+  // 8. Live normally: the dot becomes the dashboard's countdown ring; iris opens onto the real dashboard.
+  (t) => {
+    headline('Live normally', 96, 300, t - 0.1, 72, P.ink, 480);
+    const map0 = mapper(camRect(IMG.armed, { cx: 1300, cy: 700, w: 2100 }, D_SPLIT), D_SPLIT);
+    const c = map0(558, 684), iris = sp(t - 0.35, 'heavy');
+    const R = mix(0, 1500, iris) * u;
+    if (iris > 0) {
+      g.save(); g.beginPath(); g.arc(c.x, c.y, R, 0, Math.PI * 2); g.clip();
+      const push = sp(t - 1.4, 'heavy');
+      view(IMG.armed, { cx: mix(1300, 1000, push), cy: 700, w: mix(2100, 1500, push) }, D_SPLIT);
+      g.restore();
+    }
+    const from = { x: 1270 * u, y: 760 * u }, pr = sp(t, 'snappy');
+    if (iris < 0.3) { g.strokeStyle = P.accent; g.lineWidth = 9 * u; g.beginPath(); g.arc(mix(from.x, c.x, pr), mix(from.y, c.y, pr), mix(14, 52, pr) * u, 0, Math.PI * 2); g.stroke(); }
+  },
+  // 9. "I'm alive": tap, and the real countdown jumps back up (7m 11s -> 9m 41s, a real check-in).
+  (t) => {
+    const cam = { cx: 1450, cy: 640, w: 2300 }, d = { x: 220 * u, y: 70 * u, w: 1480 * u, h: 740 * u };
+    const swap = t >= 0.55;
+    const map = view(swap ? IMG.after : IMG.before, cam, d);
+    click(map, 2390, 722, t, 0.5, [2700, 1000]);
+    pill("I'm alive", 220, 830, t - 0.6);
+  },
+  // 10. A claim starts: the owner goes quiet; the real red notice panel drops in over the dimmed dashboard.
+  (t) => {
+    const cam = { cx: 1440, cy: 760, w: 2400 };
+    view(IMG.bArmed, cam, D_WIDE, { alpha: 1 });
+    const dim = remap(t, 0.6, 1.6);
+    g.fillStyle = `rgba(13,20,17,${0.55 * dim})`; rrect(g, D_WIDE.x, D_WIDE.y, D_WIDE.w, D_WIDE.h, 22 * u); g.fill();
+    label('No activity…', 960, 470, { size: 64, color: P.ink, align: 'center', alpha: clamp((t - 0.3) * 4) * (1 - remap(t, 1.9, 2.1)), font: F });
+    const s = sp(t - 2.0, 'ui');
+    if (s > 0) crop(IMG.notice, 321, 240, 2238, 555, 330 * u, mix(-500, 150, s) * u, 1260 * u, { r: 26 });
+    pill('You are warned first', 330, 820, t - 3.0);
+  },
+  // 11. Alerts fan out from the dot: real email, real Telegram, real dashboard; then "Cancel the claim".
+  (t) => {
+    const k = [0, 0.3, 0.6].map((dl) => sp(t - 0.15 - dl, 'ui'));
+    const o = { x: 960, y: 470 };
+    mark(o.x * u, o.y * u, 6 * u * (1 - k[2]), { ring: 0 });
+    crop(IMG.mailOwner, 140, 50, 1180, 620, mix(o.x, 90, k[0]) * u, mix(o.y, 230, k[0]) * u, 580 * u * mix(0.2, 1, k[0]), { rot: -0.035 * k[0], alpha: clamp(k[0] * 2) });
+    crop(IMG.tg, 58, 476, 430, 330, mix(o.x, 700, k[1]) * u, mix(o.y, 150, k[1]) * u, 520 * u * mix(0.2, 1, k[1]), { alpha: clamp(k[1] * 2) });
+    const dashW = 580 * mix(0.2, 1, k[2]), dx = mix(o.x, 1250, k[2]), dy = mix(o.y, 260, k[2]);
+    crop(IMG.notice, 321, 240, 2238, 555, dx * u, dy * u, dashW * u, { rot: 0.035 * k[2], alpha: clamp(k[2] * 2) });
+    ['Email', 'Telegram', 'Dashboard'].forEach((s, i) => label(s, [380, 960, 1540][i], 740, { size: 34, color: P.ink, alpha: k[i], font: F, align: 'center' }));
+    if (t > 3.2) {                               // "Cancel the claim" sits at (546, 615) in the real capture
+      const bx = (dx + (546 - 321) / 2238 * dashW) * u, by = (dy + (615 - 240) / 2238 * dashW) * u;
+      const map = (x, y) => ({ x: bx, y: by });
+      click(map, 0, 0, t - 3.2, 0.7, null);
+    }
+    pill('One transaction cancels it', 790, 800, t - 4.0);
+  },
+  // 12. The heir is told: the RING arrives for the first time, carrying the heir's real email.
+  (t) => {
+    const s = sp(t - 0.05, 'heavy');
+    const rx = mix(2100, 330, s);
+    mark((rx - 6.5 * 18) * u, 470 * u, 18 * u, { dot: 0, ring: 1 });
+    crop(IMG.mailHeir, 140, 50, 1180, 560, (rx + 180) * u, 230 * u, 1000 * u, { alpha: clamp(s * 2) });
+    pill('Your heir is told', (rx + 180), 740, t - 0.9, { color: P.ink });
+  },
+  // 13. Six words unlock it: the real code types in word by word, Unlock, and the claim card appears.
+  (t) => {
+    const cam = { cx: track(t, [[0, 1440], [0.5, 1440], [3.4, 1440]]), cy: track(t, [[0, 820], [0.5, 1000], [3.4, 900]]), w: track(t, [[0, 2300], [0.5, 1700], [3.4, 2200]]) };
+    const d = { x: 260 * u, y: 50 * u, w: 1400 * u, h: 780 * u };
+    const unlocked = t >= 3.15;
+    const map = view(unlocked ? IMG.inh2 : IMG.inh0, cam, d);
+    if (!unlocked) {
+      const words = clamp(Math.floor((t - 0.8) / 0.3) + 1, 0, 6);      // six real words, one at a time
+      const ends = [890, 1014, 1140, 1244, 1368, 1515];
+      if (t > 0.8) {                               // clear the placeholder, then the real typed words appear one by one
+        const f0 = map(770, 1018), f1 = map(2110, 1098);
+        g.fillStyle = '#FFFFFF'; g.fillRect(f0.x, f0.y, f1.x - f0.x, f1.y - f0.y);
+      }
+      if (words > 0) view(IMG.inh1, cam, d, { shadowOn: false, clipSrc: { x: 770, y: 1018, w: ends[words - 1] - 770, h: 80 } });
+      // the ring becomes the frame around the code field
+      const a = map(756, 999), b = map(2127, 1116), rs = sp(t - 0.3, 'snappy');
+      g.save(); g.strokeStyle = P.accent; g.lineWidth = 5 * u; g.globalAlpha = rs;
+      rrect(g, a.x - 10 * u, a.y - 10 * u, (b.x - a.x) + 20 * u, (b.y - a.y) + 20 * u, 22 * u); g.stroke(); g.restore();
+      click(map, 840, 1179, t, 2.95, [1800, 1500]);
+    }
+    pill('Six words', 260, 846, t - 0.4, { color: P.ink });
+  },
+  // 14. No wallet, no seed phrase: real balances, the send form, and the real "Sent" confirmation.
+  (t) => {
+    headline('No wallet. No seed phrase.', 96, 280, t - 0.1, 64, P.ink, 480);
+    const phase = t < 1.9 ? 0 : t < 3.7 ? 1 : 2;
+    const imgs = [IMG.wallet, IMG.sendFilled, IMG.sent];
+    const cams = [{ cx: 1440, cy: 1050, w: 1700 }, { cx: 1440, cy: 1460, w: 1700 }, { cx: 1440, cy: 1100, w: 1700 }];
+    const tl = phase === 0 ? t : phase === 1 ? t - 1.9 : t - 3.7, push = sp(tl, 'ui');
+    const c = cams[phase];
+    view(imgs[phase], { cx: c.cx, cy: c.cy + (1 - push) * 80, w: c.w * mix(1.12, 1, push) }, D_SPLIT);
+    pill(['250 RIK + 9,997 XLM', '2,500 XLM to an exchange', 'Sent ✓'][phase], 600, 848, tl - 0.2, { color: phase === 2 ? P.accent : P.ink });
+  },
+  // 15. How: the dot and ring split into the two pre-signed transactions.
+  (t) => {
+    const sp1 = sp(t - 0.2, 'ui');
+    mark(960 * u, 470 * u, 10 * u * (1 - sp1), { ring: 1 - sp1 });
+    const card = (x, y, title, rows, k, i) => {
+      if (k <= 0) return;
+      g.save(); g.globalAlpha = clamp(k * 1.5); g.translate(0, (1 - k) * 40 * u);
+      g.fillStyle = P.bg2; rrect(g, x * u, y * u, 660 * u, 360 * u, 24 * u); g.fill();
+      g.strokeStyle = i === 0 ? P.ink : P.accent; g.lineWidth = 2 * u; rrect(g, x * u, y * u, 660 * u, 360 * u, 24 * u); g.stroke();
+      text(g, title, (x + 40) * u, (y + 70) * u, { font: F(600, 40), color: P.ink });
+      rows.forEach(([kk, vv], r) => {
+        text(g, kk, (x + 40) * u, (y + 140 + r * 60) * u, { font: M(500, 26), color: P.mute });
+        text(g, vv, (x + 300) * u, (y + 140 + r * 60) * u, { font: M(500, 26), color: P.ink });
+      });
+      g.restore();
+    };
+    card(240, 230, 'The notice', [['seq', 's'], ['minSeqAge', '180 days'], ['op', 'BumpSequence']], sp(t - 0.45, 'ui'), 0);
+    card(1020, 230, 'The handover', [['seq', 's + 1'], ['minSeqAge', '30 days'], ['op', 'add heir as signer']], sp(t - 0.7, 'ui'), 1);
+    headline('Signed now. Valid only later.', 240, 160, t - 1.4, 48, P.ink, 1400);
+    pill('Stellar CAP-21 preconditions', 240, 640, t - 2.2, { color: P.ink });
+  },
+  // 16. Too early? Rejected. You act? Cancelled for good.
+  (t) => {
+    const shake = t > 1.6 && t < 2.2 ? Math.sin((t - 1.6) * 60) * 10 * (1 - (t - 1.6) / 0.6) : 0;
+    const strike = sp(t - 4.6, 'snappy');
+    const box = (x, title, sub, rej, struck, i) => {
+      g.save(); g.translate((x + (i === 0 ? shake : 0)) * u, 300 * u);
+      g.globalAlpha = i === 1 ? mix(1, 0.4, strike) : 1;
+      g.fillStyle = P.bg2; rrect(g, 0, 0, 600 * u, 300 * u, 24 * u); g.fill();
+      g.strokeStyle = rej > 0.5 ? P.danger : P.dim; g.lineWidth = 2 * u; rrect(g, 0, 0, 600 * u, 300 * u, 24 * u); g.stroke();
+      text(g, title, 36 * u, 66 * u, { font: F(600, 36), color: P.ink });
+      text(g, sub, 36 * u, 130 * u, { font: M(500, 26), color: P.mute });
+      if (struck > 0) { g.strokeStyle = P.danger; g.lineWidth = 4 * u; g.beginPath(); g.moveTo(36 * u, 122 * u); g.lineTo((36 + 160 * struck) * u, 122 * u); g.stroke(); }
+      g.restore();
+    };
+    const rej = clamp((t - 1.6) * 6);
+    box(260, 'The notice', 'seq s · 180 days', rej, strike, 0);
+    box(1060, 'The handover', 'seq s + 1 · 30 days', 0, 0, 1);
+    // an early submit flies in from the left and bounces off
+    const ax = track(t, [[0, -200], [0.6, 230], [1.6, 230], [1.75, 120]], 300, 22);
+    if (t < 2.6) { g.fillStyle = P.ink; g.globalAlpha = clamp(1 - (t - 2.0) * 2); rrect(g, ax * u, 430 * u, 34 * u, 34 * u, 17 * u); g.fill(); g.globalAlpha = 1; }
+    if (rej > 0) label('rejected: tx_bad_minseq_age_or_gap', 260, 670, { size: 32, color: P.danger, alpha: rej * (1 - remap(t, 3.4, 3.7)) });
+    headline('Too early? Rejected by the network.', 260, 200, t - 1.7, 44, P.ink, 1400);
+    // the owner sends anything: it consumes sequence s
+    const own = sp(t - 3.7, 'ui');
+    if (t > 3.6) {
+      g.save(); g.globalAlpha = clamp(own * 2); g.fillStyle = P.accent; g.font = F(600, 28);
+      const w = g.measureText('your transaction · uses seq s').width + 48 * u;
+      rrect(g, 260 * u, mix(820, 640, own) * u, w, 60 * u, 30 * u); g.fill();
+      text(g, 'your transaction · uses seq s', 284 * u, (mix(820, 640, own) + 40) * u, { font: F(600, 28), color: P.bg });
+      g.restore();
+      label('can never run', 1360, 660, { size: 30, color: P.ink, alpha: strike, align: 'center', font: F });
+    }
+  },
+  // 17. No keys held: the server keeps only the two signed transactions; the network enforces them.
+  (t) => {
+    const a = sp(t - 0.1, 'ui'), b = sp(t - 1.6, 'ui');
+    g.save(); g.globalAlpha = a;
+    g.strokeStyle = P.dim; g.lineWidth = 2 * u; rrect(g, 200 * u, 230 * u, 620 * u, 420 * u, 28 * u); g.stroke();
+    text(g, 'Riktha server', 240 * u, 300 * u, { font: F(600, 36), color: P.ink });
+    text(g, 'keys held', 240 * u, 420 * u, { font: M(500, 28), color: P.mute });
+    text(g, '0', 240 * u, 580 * u, { font: F(700, 150), color: P.accent });
+    g.restore();
+    const lineX = mix(1100, 1100, b);
+    g.save(); g.globalAlpha = b;
+    g.strokeStyle = P.ink; g.lineWidth = 3 * u; g.beginPath(); g.moveTo(lineX * u, 440 * u); g.lineTo(1720 * u, 440 * u); g.stroke();
+    text(g, 'Stellar network', lineX * u, 400 * u, { font: F(600, 34), color: P.ink });
+    text(g, 'validators enforce the timing', lineX * u, 500 * u, { font: M(500, 24), color: P.mute });
+    g.restore();
+    [0, 1].forEach((i) => {
+      const k = sp(t - 2.2 - i * 0.2, 'snappy');
+      const x = mix(560, 1200 + i * 260, k), y = mix(300 + i * 70, 440, k) - 26;
+      g.fillStyle = i === 0 ? P.ink : P.accent; rrect(g, x * u, y * u, 200 * u, 52 * u, 26 * u); g.fill();
+      text(g, i === 0 ? 'notice' : 'handover', (x + 100) * u, (y + 35) * u, { font: M(500, 22), color: P.bg, align: 'center' });
+    });
+    headline('Enforced by the network, not our servers.', 200, 150, t - 2.8, 44, P.ink, 1500);
+  },
+  // 18. Proof: push into 10/10, then pan down to scenario 2, the early claim rejected by the network.
+  (t) => {
+    const k = sp(t - 2.6, 'heavy');
+    const img = t < 2.6 ? IMG.evTop : IMG.evFull;
+    const cam = t < 2.6
+      ? { cx: mix(1440, 900, sp(t, 'heavy')), cy: mix(900, 560, sp(t, 'heavy')), w: mix(2880, 1700, sp(t, 'heavy')) }
+      : { cx: mix(1440, 2000, k), cy: mix(900, 1520, k), w: mix(2880, 1500, k) };
+    const map = view(img, cam, D_WIDE);
+    if (t > 4.0) {
+      const a = map(1458, 1230), b = map(2559, 1560), s = sp(t - 4.0, 'snappy');
+      g.save(); g.strokeStyle = P.accent; g.lineWidth = 6 * u; g.globalAlpha = s;
+      rrect(g, a.x - 12 * u, a.y - 12 * u, (b.x - a.x) + 24 * u, (b.y - a.y) + 24 * u, 24 * u); g.stroke(); g.restore();
+    }
+    pill('10 / 10 scenarios pass on testnet', 170, 850, t - 0.8, { color: P.accent });
+  },
+  // 19. CTA: everything folds back into the mark; tagline; URL.
+  (t) => {
+    const s = sp(t, 'heavy');
+    const ms = mix(4, 14, s), mx = 960 - 3.25 * ms - 230, my = 380;
+    mark(mx * u, my * u, ms * u, { ring: sp(t - 0.25, 'ui'), dx: (1 - sp(t - 0.25, 'ui')) * 300 * u });
+    const nameA = sp(t - 0.7, 'heavy');
+    g.save(); g.beginPath(); g.rect((mx + 16 * ms) * u, (my - 14 * ms) * u, 1200 * u, 28 * ms * u); g.clip();
+    text(g, 'Riktha', (mx + 17 * ms) * u, (my + 4.5 * ms + (1 - nameA) * 14 * ms) * u, { font: F(700, 12.5 * ms), color: P.ink });
+    g.restore();
+    kinetic(g, 'Name an heir. Sign once.', 960 * u, 600 * u, t - 1.6, { font: F(600, 64), size: 64 * u, color: P.ink, align: 'center', stagger: 0.08 });
+    kinetic(g, 'The network keeps your promise.', 960 * u, 690 * u, t - 3.4, { font: F(600, 64), size: 64 * u, color: P.mute, align: 'center', stagger: 0.08 });
+    const ua = sp(t - 5.0, 'snappy');
+    text(g, FILM.url, 960 * u, (800 + (1 - ua) * 20) * u, { font: M(500, 40), color: P.accent, align: 'center', alpha: clamp(ua * 1.5) });
+  },
+];
+
+const TIMES = sceneTimes(SHOTS.length);
+const film = sceneRunner(SHOTS.map((draw, i) => ({ ...TIMES[i], draw })));
+const DUR = TIMES.at(-1).to;
+
+// Subtitles: plain lines in a bottom band.
+function subtitles(t) {
+  if (!FILM.captions || !VO) return;
+  const line = VO.lines.find((l) => t >= l.start - 0.05 && t <= l.end + 0.25);
+  if (!line) return;
+  const size = 42 * u; g.save(); g.font = F(500, 42);
+  const maxW = W - 280 * u, words = line.text.split(' '), rows = [''];
+  for (const w of words) { const test = rows.at(-1) ? rows.at(-1) + ' ' + w : w; if (g.measureText(test).width > maxW && rows.at(-1)) rows.push(w); else rows[rows.length - 1] = test; }
+  const lh = size * 1.32, h = rows.length * lh + 26 * u, y = H - h - 26 * u;
+  const w = Math.max(...rows.map((r) => g.measureText(r).width)) + 56 * u;
+  g.fillStyle = 'rgba(8,12,10,0.82)'; rrect(g, L.cx - w / 2, y, w, h, 14 * u); g.fill();
+  g.fillStyle = P.ink; g.textAlign = 'center'; g.textBaseline = 'middle';
+  rows.forEach((r, i) => g.fillText(r, L.cx, y + 13 * u + lh * (i + 0.5)));
+  g.restore();
+}
+
+function draw(t) {
+  background(t);
+  film.draw(Math.min(t, DUR - 1e-6));
+  subtitles(t);
+}
+
+window.DUR = DUR;
+window.CUTS = film.cuts;
+window.SCENES = TIMES;
+window.seek = (t) => { draw(t); return true; };
+
+if (!navigator.webdriver) {
+  if (q.has('t')) draw(+q.get('t'));
+  else { const t0 = performance.now(); (function loop() { draw(((performance.now() - t0) / 1000) % DUR); requestAnimationFrame(loop); })(); }
+}
+</script>
+</body>
+</html>

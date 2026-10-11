@@ -1,0 +1,6 @@
+node_modules/
+out/
+.env
+audio/audition/
+assets/stage.local.json
+audio/*.wav
