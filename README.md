@@ -6,6 +6,7 @@ No custodian, no seed-phrase sharing, no smart contract to trust.
 *Riktha* (Sanskrit): inherited wealth; the estate left by the dead.
 
 - **Live app:** https://riktha.vercel.app (Stellar testnet)
+- **Demo video (1:45):** https://youtu.be/KGPnsqNcQz8
 - **Evidence:** every protocol claim below, backed by a public testnet transaction, at [`/evidence`](https://riktha.vercel.app/evidence) ([data](docs/evidence.json))
 - Built for *Find Your Way: Hackathon* (Stellar Passport, road to HackMeridian), General Track
 
