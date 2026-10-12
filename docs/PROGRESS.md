@@ -14,10 +14,10 @@ Status keys: ⬜ todo · 🟨 in progress · ✅ done · ⛔ blocked · ✂️ c
 
 | | |
 |---|---|
-| Phase | Built, deployed and polished (redesign 1 + nav, footer, logo, privacy) |
-| Next action | Sam does a final production test (claim kit + phone); plan + record the video; make the repo public; submit |
+| Phase | **Submitted** (General Track) |
+| Next action | Keep the live app and keeper running through judging; no code freeze needed for fixes |
 | Blockers | none |
-| Last updated | 2026-10-10 |
+| Last updated | 2026-10-12 |
 
 ---
 
@@ -111,8 +111,8 @@ Run 2026-10-08 with `pnpm spike` → `scripts/spike-results.json`. Hashes are on
 | T4.3 | Landing page: problem with cited numbers, how it works, protocol diagram, "honest limits" | Reads well on phone | ✅ landing page: problem with sources, mechanism diagram, how it works, guarantees, limits |
 | T4.4 | README: summary, why Stellar (CAP-21), architecture diagram, run locally, env vars, evidence link, honest limits, roadmap, sources, MIT | A judge can run it from the README | ✅ README |
 | T4.5 | Accessibility pass (keyboard, contrast, labels) | No blocking issues | ✅ labels, focus ring, aria-live, text+symbol states, reduced motion |
-| T4.6 | Video (≤ 3 min) — **plan together**, then record + upload (YouTube unlisted) | Link works logged-out | ⬜ |
-| T4.7 | Submit on Stellar Passport (checklist below) | Confirmation visible | ⬜ |
+| T4.6 | Video (≤ 3 min) — **plan together**, then record + upload (YouTube unlisted) | Link works logged-out | ✅ 1:45 code-rendered film (demo-video/), https://youtu.be/KGPnsqNcQz8 |
+| T4.7 | Submit on Stellar Passport (checklist below) | Confirmation visible | ✅ submitted 2026-10-12; repo public (MIT) |
 
 ---
 
